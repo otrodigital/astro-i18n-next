@@ -4,12 +4,38 @@
   "description": "Complete i18n integration for Astro 5 static sites",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/otrodigital/astro-i18n-next"
+  },
+  "homepage": "https://astro-i18n-next.otro.digital",
+  "license": "MIT",
+  "keywords": [
+    "astro",
+    "i18n",
+    "internationalization",
+    "localization",
+    "i18next",
+    "multilingual",
+    "astro-integration"
+  ],
   "peerDependencies": {
     "astro": ">=5.0.0",
     "i18next": ">=23.0.0",
@@ -17,6 +43,9 @@
     "marked": ">=9.0.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.3.0",
+    "typescript": "^5.0.0",
     "vitest": "^3.0.0"
   }
 }

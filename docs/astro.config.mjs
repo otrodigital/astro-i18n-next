@@ -19,7 +19,7 @@ export default defineConfig({
         },
       },
       social: {
-        github: 'https://github.com/AnotherDigital/astro-i18n-next',
+        github: 'https://github.com/otrodigital/astro-i18n-next',
       },
       sidebar: [
         {

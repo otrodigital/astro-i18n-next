@@ -57,7 +57,7 @@ export function createI18n(config: I18nConfig): AstroIntegration {
   const serializedSlugMaps = JSON.stringify(slugMaps);
 
   return {
-    name: '@otrodigital/i18n-next',
+    name: '@otrodigital/astro-i18n-next',
     hooks: {
       'astro:config:setup': (hookOptions) => {
         // Delegate route injection and Astro i18n config
@@ -78,10 +78,10 @@ export function createI18n(config: I18nConfig): AstroIntegration {
                 if (id !== '\0virtual:i18n') return;
 
                 return `
-import { createTranslator } from '@otrodigital/i18n-next';
-import { createSlugResolver } from '@otrodigital/i18n-next';
-import { createRouteHelpers } from '@otrodigital/i18n-next';
-import { createContentHelper } from '@otrodigital/i18n-next';
+import { createTranslator } from '@otrodigital/astro-i18n-next';
+import { createSlugResolver } from '@otrodigital/astro-i18n-next';
+import { createRouteHelpers } from '@otrodigital/astro-i18n-next';
+import { createContentHelper } from '@otrodigital/astro-i18n-next';
 
 const _cfg = ${serializedConfig};
 const _slugMaps = ${serializedSlugMaps};

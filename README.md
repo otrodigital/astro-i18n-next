@@ -1,11 +1,11 @@
-# @otrodigital/i18n-next
+# @otrodigital/astro-i18n-next
 
 A complete internationalization module for Astro 5 static sites. Provides translated URL routing, content localization, multilingual markdown loading, and i18next-based translations — all through a single `createI18n` integration with a `virtual:i18n` module for component imports.
 
 ## Install
 
 ```bash
-npm install @otrodigital/i18n-next
+npm install @otrodigital/astro-i18n-next
 ```
 
 Or as a local dependency:
@@ -13,7 +13,7 @@ Or as a local dependency:
 ```json
 {
   "dependencies": {
-    "@otrodigital/i18n-next": "file:./modules/i18n-next"
+    "@otrodigital/astro-i18n-next": "file:./modules/astro-i18n-next"
   }
 }
 ```
@@ -33,7 +33,7 @@ marked >= 9.0.0
 
 ```js
 import { defineConfig } from 'astro/config';
-import { createI18n } from '@otrodigital/i18n-next';
+import { createI18n } from '@otrodigital/astro-i18n-next';
 import en from './src/i18n/en.json' with { type: 'json' };
 import es from './src/i18n/es.json' with { type: 'json' };
 
@@ -69,7 +69,7 @@ declare module 'virtual:i18n' {
   export const localized: <T>(field: Record<string, T>, locale: string) => T;
   export const getLocalizedSlug: (category: string, canonicalSlug: string, locale: string) => string;
   export const getCanonicalSlug: (category: string, localizedSlug: string, locale: string) => string | undefined;
-  export const config: import('@otrodigital/i18n-next').LocaleConfig;
+  export const config: import('@otrodigital/astro-i18n-next').LocaleConfig;
   export const defaultLocale: string;
   export const locales: string[];
   export const localeLabels: Record<string, string>;
@@ -81,7 +81,7 @@ declare module 'virtual:i18n' {
 
 ```ts
 // src/middleware.ts
-import { createI18nMiddleware } from '@otrodigital/i18n-next';
+import { createI18nMiddleware } from '@otrodigital/astro-i18n-next';
 import { config } from 'virtual:i18n';
 
 export const onRequest = createI18nMiddleware(config);
@@ -192,7 +192,7 @@ Creates an Astro integration that sets up i18n routing and provides a `virtual:i
 
 ```js
 // astro.config.mjs
-import { createI18n } from '@otrodigital/i18n-next';
+import { createI18n } from '@otrodigital/astro-i18n-next';
 
 export default defineConfig({
   integrations: [createI18n({
@@ -396,7 +396,7 @@ Contenido en español con **markdown**.
 #### Schema example
 
 ```ts
-import { createMultilingualLoader } from '@otrodigital/i18n-next';
+import { createMultilingualLoader } from '@otrodigital/astro-i18n-next';
 
 const saunas = defineCollection({
   loader: createMultilingualLoader({ contentDir: 'src/content/saunas' }),
@@ -419,7 +419,7 @@ Synchronously reads `.md` files from an **absolute path** and extracts `slugs` f
 
 ```ts
 import { join } from 'node:path';
-import { loadSlugMapSync } from '@otrodigital/i18n-next';
+import { loadSlugMapSync } from '@otrodigital/astro-i18n-next';
 
 const slugMap = loadSlugMapSync(join(process.cwd(), 'src/content/saunas'));
 // { 'model-165': { en: 'model-165', es: 'modelo-165' }, ... }
@@ -432,7 +432,7 @@ const slugMap = loadSlugMapSync(join(process.cwd(), 'src/content/saunas'));
 Synchronously scans a pages directory for `.astro` files and builds a page map.
 
 ```ts
-import { loadPageMapSync } from '@otrodigital/i18n-next';
+import { loadPageMapSync } from '@otrodigital/astro-i18n-next';
 
 const { pages, pageSlugMap } = loadPageMapSync('src/pages', ['en', 'es']);
 ```
