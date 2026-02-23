@@ -1,0 +1,118 @@
+---
+title: Content Loader
+description: API reference for the multilingual markdown content loader.
+---
+
+```ts
+function createMultilingualLoader(options: {
+  contentDir: string;
+}): AstroLoader
+```
+
+An Astro 5 content loader that reads multilingual markdown files from a directory. Each file contains all locale variants — localized YAML frontmatter and body content separated by locale markers.
+
+## Usage
+
+```ts
+// src/content.config.ts
+import { defineCollection, z } from 'astro:content';
+import { createMultilingualLoader } from '@otrodigital/astro-i18n-next';
+
+const saunas = defineCollection({
+  loader: createMultilingualLoader({ contentDir: 'src/content/saunas' }),
+  schema: z.object({
+    name: z.object({ en: z.string(), es: z.string().optional() }),
+    slugs: z.object({ en: z.string(), es: z.string().optional() }),
+    image: z.string(),
+    description: z.object({ en: z.string(), es: z.string().optional() }),
+    published: z.coerce.date(),
+    bodyHtml: z.record(z.string()).optional(),
+  }),
+});
+
+export const collections = { saunas };
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `options.contentDir` | `string` | Relative path from project root to the content directory |
+
+## Markdown file format
+
+```md
+---
+name:
+  en: Model 165
+  es: Modelo 165
+slugs:
+  en: model-165
+  es: modelo-165
+image: /images/model-165.jpg
+description:
+  en: Compact sauna solution
+  es: Solución de sauna compacta
+published: 2024-01-01
+---
+
+English body content with **markdown**.
+
+<!-- locale:es -->
+
+Contenido en español con **markdown**.
+```
+
+### Frontmatter
+
+- **Localized fields** are objects with locale keys: `{ en: "...", es: "..." }`
+- **Shared fields** are plain values: `image: /images/model-165.jpg`
+- Both types can coexist in the same frontmatter
+- Parsed with `js-yaml`
+
+### Body content
+
+- Content before the first `<!-- locale:XX -->` marker belongs to the default locale
+- Each `<!-- locale:XX -->` marker starts a new locale section
+- Sections are rendered to HTML with `marked`
+- The resulting HTML is stored in a `bodyHtml` record keyed by locale
+
+## Output
+
+Each markdown file produces a content entry with:
+
+- **`id`** — the filename without extension (e.g., `model-165`)
+- **`data`** — the parsed frontmatter, plus a `bodyHtml` field:
+
+```ts
+{
+  name: { en: 'Model 165', es: 'Modelo 165' },
+  slugs: { en: 'model-165', es: 'modelo-165' },
+  image: '/images/model-165.jpg',
+  bodyHtml: {
+    en: '<p>English body content with <strong>markdown</strong>.</p>',
+    es: '<p>Contenido en español con <strong>markdown</strong>.</p>',
+  },
+}
+```
+
+## Using `localized()` with content
+
+The `localized()` helper from `virtual:i18n` extracts locale-specific values from the multilingual field objects:
+
+```astro
+---
+import { getCollection } from 'astro:content';
+import { localized } from 'virtual:i18n';
+const locale = Astro.locals.locale;
+const entries = await getCollection('saunas');
+---
+
+{entries.map(entry => (
+  <article>
+    <h2>{localized(entry.data.name, locale)}</h2>
+    <p>{localized(entry.data.description, locale)}</p>
+    <div set:html={entry.data.bodyHtml?.[locale]} />
+  </article>
+))}
+```

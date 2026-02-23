@@ -1,0 +1,73 @@
+---
+title: Opciones Personalizadas de i18next
+description: Personalización profunda del motor de traducción i18next.
+---
+
+`astro-i18n-next` usa i18next internamente. Puedes personalizar su comportamiento a través del campo de configuración `i18next`.
+
+## Configuración predeterminada
+
+El traductor integrado inicializa i18next con estos valores predeterminados:
+
+```ts
+{
+  lng: defaultLocale,
+  fallbackLng: defaultLocale,
+  resources: {
+    en: { translation: enTranslations },
+    es: { translation: esTranslations },
+    // ... uno por idioma
+  },
+  interpolation: {
+    escapeValue: false,  // Seguro para set:html de Astro
+  },
+  returnNull: false,     // Las claves faltantes devuelven el string de la clave
+}
+```
+
+## Agregando opciones personalizadas
+
+Pasa opciones extra via `i18next.options`:
+
+```js
+createI18n({
+  // ...
+  i18next: {
+    options: {
+      supportedLngs: ['en', 'es'],
+      interpolation: {
+        prefix: '{{',
+        suffix: '}}',
+      },
+    },
+  },
+})
+```
+
+Estas se fusionan con los valores predeterminados usando merge superficial. Tus valores tienen prioridad.
+
+## Instancias aisladas
+
+Cada llamada a `createTranslator()` crea una nueva instancia aislada de i18next usando `i18next.createInstance()`. Esto significa:
+
+- Múltiples llamadas no interferirán entre sí
+- Es seguro usarlo en contextos SSR
+- Puedes crear diferentes traductores con diferentes configuraciones si es necesario
+
+## Limitaciones de plugins
+
+Los plugins de i18next pasados via `i18next.plugins` se usan durante la llamada inicial de `createTranslator()`, pero **no son serializables**. Esto significa:
+
+- Los plugins funcionan en tiempo de compilación cuando `createI18n` se ejecuta
+- Los plugins **no están disponibles** en el módulo `virtual:i18n` (que es código serializado)
+- Usa `i18next.options` para cualquier configuración que necesite sobrevivir la serialización
+
+## Comportamiento de fallback
+
+La cadena de fallback funciona así:
+
+1. Busca la clave en el idioma solicitado
+2. Si no se encuentra, busca la clave en `defaultLocale`
+3. Si aún no se encuentra, devuelve el string de la clave misma
+
+Esto asegura que tu UI nunca muestre contenido en blanco — en el peor caso, muestra la traducción en inglés o el nombre de la clave.

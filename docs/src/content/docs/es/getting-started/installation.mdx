@@ -1,0 +1,45 @@
+---
+title: Instalación
+description: Cómo instalar @otrodigital/astro-i18n-next y sus dependencias.
+---
+
+## Instalar el paquete
+
+```bash
+npm install @otrodigital/astro-i18n-next
+```
+
+O agrégalo como dependencia local en tu `package.json`:
+
+```json
+{
+  "dependencies": {
+    "@otrodigital/astro-i18n-next": "file:./modules/astro-i18n-next"
+  }
+}
+```
+
+## Dependencias peer
+
+Los siguientes paquetes deben estar instalados en tu proyecto:
+
+| Paquete | Versión | Propósito |
+|---------|---------|-----------|
+| `astro` | `>= 5.0.0` | Framework Astro con soporte de enrutamiento i18n |
+| `i18next` | `>= 23.0.0` | Motor de traducción |
+| `js-yaml` | `>= 4.0.0` | Parseo de frontmatter YAML para contenido multilingüe |
+| `marked` | `>= 9.0.0` | Renderizado de Markdown para el cuerpo del contenido |
+
+Instálalos todos de una vez:
+
+```bash
+npm install astro i18next js-yaml marked
+```
+
+:::note
+`js-yaml` y `marked` solo son necesarios si usas el cargador de contenido multilingüe (`createMultilingualLoader`). Si solo usas rutas traducidas y traducciones con i18next, puedes omitirlos.
+:::
+
+## Próximos pasos
+
+Dirígete a la guía de [Inicio Rápido](/es/getting-started/quick-start/) para configurar tu primer sitio Astro multilingüe.

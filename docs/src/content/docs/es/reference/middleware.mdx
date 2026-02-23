@@ -1,0 +1,65 @@
+---
+title: Middleware
+description: Referencia API para el middleware de detección de idioma.
+---
+
+```ts
+function createI18nMiddleware(
+  config: LocaleConfig
+): (context: APIContext, next: MiddlewareNext) => Promise<Response>
+```
+
+Crea un middleware de Astro que detecta el idioma desde la URL y lo establece en `Astro.locals.locale`.
+
+## Uso
+
+```ts
+// src/middleware.ts
+import { createI18nMiddleware } from '@otrodigital/astro-i18n-next';
+import { config } from 'virtual:i18n';
+
+export const onRequest = createI18nMiddleware(config);
+```
+
+## Parámetros
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `config` | `LocaleConfig` | Configuración de idioma (disponible desde `virtual:i18n` como `config`) |
+
+## Comportamiento
+
+El middleware:
+
+1. Lee la ruta URL de la solicitud
+2. Verifica si el primer segmento coincide con un idioma configurado
+3. Establece `Astro.locals.locale` al idioma detectado (o `defaultLocale` si no se encuentra prefijo)
+4. Llama a `next()` para continuar la solicitud
+
+**Ejemplos:**
+
+| URL de solicitud | `Astro.locals.locale` |
+|---|---|
+| `/about/` | `'en'` (predeterminado) |
+| `/es/sobre/` | `'es'` |
+| `/es/saunas/modelo-165/` | `'es'` |
+
+## Composición con otro middleware
+
+Si tienes middleware existente, compónlos usando `sequence` de Astro:
+
+```ts
+// src/middleware.ts
+import { sequence } from 'astro:middleware';
+import { createI18nMiddleware } from '@otrodigital/astro-i18n-next';
+import { config } from 'virtual:i18n';
+
+const i18n = createI18nMiddleware(config);
+
+async function myMiddleware(context, next) {
+  // Tu lógica personalizada aquí
+  return next();
+}
+
+export const onRequest = sequence(i18n, myMiddleware);
+```

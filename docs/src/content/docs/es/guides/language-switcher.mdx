@@ -1,0 +1,74 @@
+---
+title: Selector de Idioma
+description: Construye un componente selector de idioma usando switchLocalePath.
+---
+
+Esta guía muestra cómo construir un selector de idioma que permite a los usuarios navegar entre idiomas manteniéndose en la página equivalente.
+
+## La función `switchLocalePath`
+
+`switchLocalePath` convierte una ruta de un idioma a otro, traduciendo slugs en ambas direcciones:
+
+```ts
+import { switchLocalePath } from 'virtual:i18n';
+
+switchLocalePath('/es/sobre/', 'en');     // "/about/"
+switchLocalePath('/about/', 'es');         // "/es/sobre/"
+switchLocalePath('/es/saunas/modelo-165/', 'en');  // "/saunas/model-165/"
+```
+
+## Componente selector de idioma
+
+Aquí tienes un selector de idioma completo usando las exportaciones de `virtual:i18n`:
+
+```astro
+---
+// src/components/LanguageSwitcher.astro
+import { locales, localeLabels, switchLocalePath } from 'virtual:i18n';
+
+const currentPath = Astro.url.pathname;
+const currentLocale = Astro.locals.locale;
+---
+
+<nav aria-label="Idioma">
+  <ul>
+    {locales.map(locale => (
+      <li>
+        {locale === currentLocale ? (
+          <strong>{localeLabels[locale]}</strong>
+        ) : (
+          <a href={switchLocalePath(currentPath, locale)}>
+            {localeLabels[locale]}
+          </a>
+        )}
+      </li>
+    ))}
+  </ul>
+</nav>
+```
+
+## Agregando enlaces `hreflang` alternativos
+
+Para SEO, agrega enlaces `hreflang` en el `<head>` de tu layout:
+
+```astro
+---
+// src/layouts/BaseLayout.astro
+import { locales, localeHtmlLang, switchLocalePath } from 'virtual:i18n';
+
+const currentPath = Astro.url.pathname;
+---
+
+<head>
+  {locales.map(locale => (
+    <link
+      rel="alternate"
+      hreflang={localeHtmlLang[locale]}
+      href={switchLocalePath(currentPath, locale)}
+    />
+  ))}
+  <link rel="alternate" hreflang="x-default" href={currentPath} />
+</head>
+```
+
+Esto le indica a los motores de búsqueda sobre todas las versiones de idioma disponibles de cada página.

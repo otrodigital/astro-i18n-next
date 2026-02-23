@@ -1,0 +1,81 @@
+---
+title: Plugins de i18next
+description: Extiende las traducciones con plugins de i18next como el formato de mensajes ICU.
+---
+
+`astro-i18n-next` usa i18next internamente para las traducciones. Puedes extenderlo con plugins y configuración personalizados.
+
+## Agregando un plugin
+
+Pasa los plugins a través del campo de configuración `i18next`:
+
+```ts
+// astro.config.mjs
+import ICU from 'i18next-icu';
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    i18next: {
+      plugins: [ICU],
+      options: {
+        supportedLngs: ['en', 'es'],
+      },
+    },
+  })],
+});
+```
+
+## Ejemplo de formato de mensajes ICU
+
+Con `i18next-icu`, puedes usar sintaxis ICU en tus archivos de traducción:
+
+```json
+{
+  "items": "{count, plural, =0 {No hay elementos} one {# elemento} other {# elementos}}",
+  "greeting": "¡Hola, {name}!"
+}
+```
+
+```astro
+---
+import { t } from 'virtual:i18n';
+const locale = Astro.locals.locale;
+---
+
+<p>{t(locale, 'items', { count: 5 })}</p>
+<p>{t(locale, 'greeting', { name: 'Mundo' })}</p>
+```
+
+## Opciones personalizadas de i18next
+
+El campo `i18next.options` se pasa directamente a `i18next.init()`. Puedes usarlo para configurar cualquier comportamiento de i18next:
+
+```ts
+i18next: {
+  options: {
+    supportedLngs: ['en', 'es'],
+    interpolation: {
+      prefix: '{{',
+      suffix: '}}',
+    },
+  },
+}
+```
+
+:::caution
+Los plugins de i18next no son serializables y **no estarán disponibles en el módulo virtual**. Solo se usan durante la llamada inicial de `createTranslator()` en tiempo de compilación. Usa `i18next.options` para cualquier configuración que necesite sobrevivir la serialización.
+:::
+
+## Comportamiento predeterminado de i18next
+
+El traductor integrado está configurado con:
+
+- `interpolation.escapeValue: false` — HTML no se escapa (seguro para `set:html` de Astro)
+- `returnNull: false` — las claves faltantes devuelven el string de la clave, nunca `null`
+- Fallback al `defaultLocale` para cualquier clave de traducción faltante
+- Instancia de i18next aislada (seguro llamar a `createTranslator` múltiples veces)

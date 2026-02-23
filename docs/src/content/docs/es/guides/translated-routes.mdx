@@ -1,0 +1,62 @@
+---
+title: Rutas Traducidas
+description: Cómo funciona el enrutamiento con URLs con prefijo de idioma en astro-i18n-next.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+`astro-i18n-next` genera rutas específicas por idioma en tiempo de compilación. El idioma predeterminado no tiene prefijo en la URL, mientras que todos los demás idiomas llevan prefijo.
+
+## Cómo funciona
+
+Dada una página `src/pages/about.astro` con:
+
+```astro
+---
+export const slugs = { en: 'about', es: 'sobre' };
+---
+```
+
+La integración genera estas rutas:
+
+| Idioma | URL | Entrypoint de Astro |
+|--------|-----|---------------------|
+| `en` (predeterminado) | `/about/` | `src/pages/about.astro` |
+| `es` | `/es/sobre/` | `src/pages/about.astro` |
+
+Ambas rutas renderizan el mismo componente — el idioma está disponible via `Astro.locals.locale`.
+
+## Usando `localePath()`
+
+`localePath` traduce una ruta canónica (idioma predeterminado) a la URL específica del idioma:
+
+```ts
+import { localePath } from 'virtual:i18n';
+
+localePath('en', '/about/');              // "/about/"
+localePath('es', '/about/');              // "/es/sobre/"
+localePath('es', '/saunas/model-165/');   // "/es/saunas/modelo-165/"
+```
+
+Maneja tanto slugs de páginas como slugs de contenido, y funciona con rutas anidadas.
+
+:::tip
+Siempre usa rutas canónicas (en inglés) como segundo argumento. `localePath` se encarga de traducir cada segmento de la ruta.
+:::
+
+## Rutas anidadas
+
+Para páginas anidadas como `src/pages/saunas/index.astro`, solo se traduce el segmento final del slug. La estructura de directorios permanece igual:
+
+```
+/saunas/            → /es/saunas/           (directorio no traducido)
+/saunas/model-165/  → /es/saunas/modelo-165/ (slug de contenido traducido)
+```
+
+## Sin necesidad de rutas dinámicas
+
+A diferencia de otros enfoques de i18n, no necesitas rutas catch-all como `[...slug].astro`. La integración usa la API `injectRoute()` de Astro para crear rutas concretas para cada idioma en tiempo de compilación. Esto significa:
+
+- Pre-renderizado estático completo
+- Sin coincidencia de rutas en tiempo de ejecución
+- Cada ruta mapea a un componente `.astro` conocido

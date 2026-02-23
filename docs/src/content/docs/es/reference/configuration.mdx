@@ -1,0 +1,139 @@
+---
+title: Configuración
+description: Referencia completa de las opciones de I18nConfig.
+---
+
+La función `createI18n()` acepta un único objeto de configuración de tipo `I18nConfig`.
+
+## Campos requeridos
+
+### `defaultLocale`
+
+**Tipo:** `string`
+
+El código de idioma predeterminado. Las páginas en este idioma se sirven sin prefijo de URL.
+
+```js
+defaultLocale: 'en'
+```
+
+### `locales`
+
+**Tipo:** `string[]`
+
+Array de todos los códigos de idioma soportados, incluyendo el predeterminado.
+
+```js
+locales: ['en', 'es', 'fr']
+```
+
+### `localeLabels`
+
+**Tipo:** `Record<string, string>`
+
+Nombres legibles para cada idioma. Usados en selectores de idioma.
+
+```js
+localeLabels: { en: 'English', es: 'Español', fr: 'Français' }
+```
+
+### `localeHtmlLang`
+
+**Tipo:** `Record<string, string>`
+
+Valores del atributo HTML `lang` para cada idioma.
+
+```js
+localeHtmlLang: { en: 'en', es: 'es', fr: 'fr' }
+```
+
+### `translations`
+
+**Tipo:** `Record<string, Record<string, unknown>>`
+
+Objetos clave-valor de traducción para cada idioma. Típicamente importados desde archivos JSON.
+
+```js
+import en from './src/i18n/en.json' with { type: 'json' };
+import es from './src/i18n/es.json' with { type: 'json' };
+
+// ...
+translations: { en, es }
+```
+
+## Campos opcionales
+
+### `pagesDir`
+
+**Tipo:** `string | undefined`
+
+Ruta relativa desde la raíz del proyecto al directorio de páginas. Cuando se establece, la integración escanea archivos `.astro` en busca de declaraciones `export const slugs` para construir el mapa de slugs de páginas.
+
+```js
+pagesDir: 'src/pages'
+```
+
+### `contentDirs`
+
+**Tipo:** `Record<string, string> | undefined`
+
+Mapa de nombres de colección a rutas de directorio relativas. Cada directorio se escanea en busca de archivos markdown con `slugs` en su frontmatter YAML.
+
+```js
+contentDirs: {
+  saunas: 'src/content/saunas',
+  products: 'src/content/products',
+}
+```
+
+### `slugMaps`
+
+**Tipo:** `Record<string, SlugMap> | undefined`
+
+Mapas de slugs definidos manualmente. Se fusionan con los auto-descubiertos (los manuales tienen prioridad).
+
+```js
+slugMaps: {
+  pages: {
+    about: { en: 'about', es: 'sobre' },
+  },
+}
+```
+
+### `i18next`
+
+**Tipo:** `I18nextOptions | undefined`
+
+Plugins y opciones de inicialización de i18next personalizados.
+
+```js
+i18next: {
+  plugins: [ICU],
+  options: {
+    supportedLngs: ['en', 'es'],
+  },
+}
+```
+
+Consulta la guía de [Plugins de i18next](/es/guides/i18next-plugins/) para más detalles.
+
+## Ejemplo completo
+
+```js
+import { defineConfig } from 'astro/config';
+import { createI18n } from '@otrodigital/astro-i18n-next';
+import en from './src/i18n/en.json' with { type: 'json' };
+import es from './src/i18n/es.json' with { type: 'json' };
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+    contentDirs: { saunas: 'src/content/saunas' },
+  })],
+});
+```

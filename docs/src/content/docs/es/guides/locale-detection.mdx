@@ -1,0 +1,70 @@
+---
+title: Detección de Idioma
+description: Cómo el middleware detecta el idioma actual desde la URL.
+---
+
+El middleware de detección de idioma extrae el idioma actual de la ruta de la URL y lo hace disponible en cada solicitud via `Astro.locals.locale`.
+
+## Configuración
+
+```ts
+// src/middleware.ts
+import { createI18nMiddleware } from '@otrodigital/astro-i18n-next';
+import { config } from 'virtual:i18n';
+
+export const onRequest = createI18nMiddleware(config);
+```
+
+## Cómo funciona
+
+El middleware verifica el primer segmento de la ruta URL contra los idiomas configurados:
+
+| URL | Idioma detectado |
+|-----|-----------------|
+| `/about/` | `en` (predeterminado) |
+| `/es/sobre/` | `es` |
+| `/es/saunas/modelo-165/` | `es` |
+| `/contact/` | `en` (predeterminado) |
+
+Si no se encuentra un prefijo de idioma, se usa el `defaultLocale`.
+
+## Usando el idioma
+
+Accede al idioma detectado en cualquier componente `.astro`:
+
+```astro
+---
+const locale = Astro.locals.locale;
+---
+
+<html lang={locale}>
+  <body>
+    <p>Idioma actual: {locale}</p>
+  </body>
+</html>
+```
+
+## Tipado TypeScript
+
+Para tipar `Astro.locals.locale`, agrega esto a tu `src/env.d.ts`:
+
+```ts
+declare namespace App {
+  interface Locals {
+    locale: string;
+  }
+}
+```
+
+## Detección programática de idioma
+
+También puedes extraer el idioma de una URL sin el middleware usando `getLocaleFromPath`:
+
+```ts
+import { getLocaleFromPath } from 'virtual:i18n';
+
+getLocaleFromPath('/es/sobre/');  // "es"
+getLocaleFromPath('/about/');     // "en" (predeterminado)
+```
+
+Esto es útil en scripts, rutas API, o cualquier contexto donde el middleware no haya ejecutado.

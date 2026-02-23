@@ -1,0 +1,97 @@
+---
+title: Traducción de Slugs
+description: Traduce slugs de URL para páginas y entradas de contenido.
+---
+
+La traducción de slugs te permite tener URLs específicas por idioma como `/es/sobre/` en lugar de `/es/about/`. Hay dos mecanismos: **slugs de página** para archivos `.astro` y **slugs de contenido** para entradas markdown.
+
+## Slugs de página
+
+Exporta una constante `slugs` desde cualquier página `.astro`:
+
+```astro
+---
+// src/pages/about.astro
+export const slugs = { en: 'about', es: 'sobre' };
+---
+```
+
+La integración los descubre en tiempo de compilación escaneando el directorio `pagesDir`. No se necesita configuración adicional.
+
+### Comportamiento de fallback
+
+Las páginas sin exportación de `slugs` usan el nombre del archivo como slug para todos los idiomas. Por ejemplo, `src/pages/contact.astro` se convierte en `/contact/` y `/es/contact/`.
+
+## Slugs de contenido
+
+Los archivos de contenido markdown definen slugs en su frontmatter YAML:
+
+```yaml
+---
+slugs:
+  en: model-165
+  es: modelo-165
+---
+```
+
+Estos se descubren cuando especificas `contentDirs` en la configuración:
+
+```js
+createI18n({
+  // ...
+  contentDirs: {
+    saunas: 'src/content/saunas',
+  },
+})
+```
+
+## Resolviendo slugs
+
+El módulo `virtual:i18n` exporta dos funciones para resolución de slugs:
+
+### `getLocalizedSlug(category, canonicalSlug, locale)`
+
+Traduce un slug canónico (idioma predeterminado) a un slug específico del idioma:
+
+```ts
+import { getLocalizedSlug } from 'virtual:i18n';
+
+getLocalizedSlug('saunas', 'model-165', 'es');  // "modelo-165"
+getLocalizedSlug('saunas', 'model-165', 'en');  // "model-165"
+```
+
+### `getCanonicalSlug(category, localizedSlug, locale)`
+
+Búsqueda inversa — encuentra el slug canónico a partir de uno localizado:
+
+```ts
+import { getCanonicalSlug } from 'virtual:i18n';
+
+getCanonicalSlug('saunas', 'modelo-165', 'es');  // "model-165"
+```
+
+El argumento `category` coincide con la clave usada en `contentDirs` (o `slugMaps` si se proporcionan manualmente).
+
+:::note
+Los slugs de página usan la categoría `"pages"` internamente. Los slugs de contenido usan la clave que definiste en `contentDirs`.
+:::
+
+## Mapas de slugs manuales
+
+Si necesitas control total, puedes proporcionar mapas de slugs directamente en lugar de auto-descubrirlos:
+
+```js
+createI18n({
+  // ...
+  slugMaps: {
+    pages: {
+      about: { en: 'about', es: 'sobre' },
+    },
+    saunas: {
+      'model-165': { en: 'model-165', es: 'modelo-165' },
+    },
+  },
+})
+```
+
+Los mapas de slugs manuales y los auto-descubiertos se fusionan, con los manuales teniendo prioridad.

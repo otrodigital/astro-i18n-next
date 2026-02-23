@@ -1,0 +1,97 @@
+---
+title: Slug Translation
+description: Translate URL slugs for pages and content entries.
+---
+
+Slug translation lets you have locale-specific URLs like `/es/sobre/` instead of `/es/about/`. There are two mechanisms: **page slugs** for `.astro` pages and **content slugs** for markdown entries.
+
+## Page slugs
+
+Export a `slugs` constant from any `.astro` page:
+
+```astro
+---
+// src/pages/about.astro
+export const slugs = { en: 'about', es: 'sobre' };
+---
+```
+
+The integration discovers these at build time by scanning the `pagesDir` directory. No additional config is needed.
+
+### Fallback behavior
+
+Pages without a `slugs` export use the filename as the slug for all locales. For example, `src/pages/contact.astro` becomes `/contact/` and `/es/contact/`.
+
+## Content slugs
+
+Markdown content files define slugs in their YAML frontmatter:
+
+```yaml
+---
+slugs:
+  en: model-165
+  es: modelo-165
+---
+```
+
+These are discovered when you specify `contentDirs` in the config:
+
+```js
+createI18n({
+  // ...
+  contentDirs: {
+    saunas: 'src/content/saunas',
+  },
+})
+```
+
+## Resolving slugs
+
+The `virtual:i18n` module exports two functions for slug resolution:
+
+### `getLocalizedSlug(category, canonicalSlug, locale)`
+
+Translates a canonical (default-locale) slug to a locale-specific slug:
+
+```ts
+import { getLocalizedSlug } from 'virtual:i18n';
+
+getLocalizedSlug('saunas', 'model-165', 'es');  // "modelo-165"
+getLocalizedSlug('saunas', 'model-165', 'en');  // "model-165"
+```
+
+### `getCanonicalSlug(category, localizedSlug, locale)`
+
+Reverse lookup — finds the canonical slug from a localized one:
+
+```ts
+import { getCanonicalSlug } from 'virtual:i18n';
+
+getCanonicalSlug('saunas', 'modelo-165', 'es');  // "model-165"
+```
+
+The `category` argument matches the key used in `contentDirs` (or `slugMaps` if provided manually).
+
+:::note
+Page slugs use the category `"pages"` internally. Content slugs use the key you defined in `contentDirs`.
+:::
+
+## Manual slug maps
+
+If you need full control, you can provide slug maps directly instead of auto-discovering them:
+
+```js
+createI18n({
+  // ...
+  slugMaps: {
+    pages: {
+      about: { en: 'about', es: 'sobre' },
+    },
+    saunas: {
+      'model-165': { en: 'model-165', es: 'modelo-165' },
+    },
+  },
+})
+```
+
+Manual slug maps and auto-discovered maps are merged, with manual maps taking priority.

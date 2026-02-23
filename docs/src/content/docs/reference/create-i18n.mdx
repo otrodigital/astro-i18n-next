@@ -1,0 +1,65 @@
+---
+title: createI18n()
+description: The main integration function that sets up everything.
+---
+
+```ts
+function createI18n(config: I18nConfig): AstroIntegration
+```
+
+Creates an Astro integration that sets up i18n routing and provides a `virtual:i18n` module. This is the primary entry point for the package.
+
+## What it does
+
+1. **Auto-discovers page slugs** from `pagesDir` via `loadPageMapSync`
+2. **Auto-discovers content slugs** from `contentDirs` via `loadSlugMapSync`
+3. **Injects locale routes** for all non-default locales using Astro's `injectRoute()` API
+4. **Serves a `virtual:i18n` Vite module** exporting all i18n helpers and config values
+
+## Usage
+
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import { createI18n } from '@otrodigital/astro-i18n-next';
+import en from './src/i18n/en.json' with { type: 'json' };
+import es from './src/i18n/es.json' with { type: 'json' };
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+    contentDirs: { saunas: 'src/content/saunas' },
+  })],
+});
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `I18nConfig` | Full i18n configuration. See [Configuration](/reference/configuration/). |
+
+## Return value
+
+Returns an `AstroIntegration` object that you pass to the `integrations` array in your Astro config. The integration:
+
+- Configures Astro's built-in i18n settings (`prefixDefaultLocale: false`, `redirectToDefaultLocale: true`)
+- Injects a route for each page in each non-default locale, using the translated slug
+- Registers a Vite plugin that resolves `virtual:i18n` imports
+
+## The Vite plugin
+
+The integration includes a Vite plugin that serves a virtual module at `virtual:i18n`. This module is generated at build time and contains:
+
+- Pre-initialized translation function (`t`)
+- Route helpers with the slug maps baked in
+- Content helper with the default locale baked in
+- Slug resolver functions
+- All locale config values
+
+This means components can `import { t, localePath } from 'virtual:i18n'` without any runtime setup.

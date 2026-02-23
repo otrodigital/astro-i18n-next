@@ -1,0 +1,143 @@
+---
+title: Quick Start
+description: Set up a multilingual Astro site in 5 steps.
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide walks you through setting up `@otrodigital/astro-i18n-next` from scratch. By the end, you'll have translated URL routing and i18next translations working.
+
+<Steps>
+
+1. **Add the integration** in `astro.config.mjs`:
+
+    ```js
+    // astro.config.mjs
+    import { defineConfig } from 'astro/config';
+    import { createI18n } from '@otrodigital/astro-i18n-next';
+    import en from './src/i18n/en.json' with { type: 'json' };
+    import es from './src/i18n/es.json' with { type: 'json' };
+
+    export default defineConfig({
+      integrations: [createI18n({
+        defaultLocale: 'en',
+        locales: ['en', 'es'],
+        localeLabels: { en: 'English', es: 'Español' },
+        localeHtmlLang: { en: 'en', es: 'es' },
+        translations: { en, es },
+        pagesDir: 'src/pages',
+        contentDirs: { saunas: 'src/content/saunas' },
+      })],
+    });
+    ```
+
+    The integration automatically:
+    - Scans `pagesDir` for `.astro` files and builds the page slug map
+    - Scans `contentDirs` for markdown slug maps
+    - Injects localized routes for all non-default locales
+    - Provides a `virtual:i18n` module with all i18n helpers
+
+2. **Add type declarations** to `src/env.d.ts`:
+
+    ```ts
+    /// <reference types="astro/client" />
+
+    declare module 'virtual:i18n' {
+      export const t: (locale: string, key: string) => string;
+      export const localePath: (locale: string, path: string) => string;
+      export const switchLocalePath: (currentPath: string, targetLocale: string) => string;
+      export const getLocaleFromPath: (pathname: string) => string;
+      export const localized: <T>(field: Record<string, T>, locale: string) => T;
+      export const getLocalizedSlug: (category: string, canonicalSlug: string, locale: string) => string;
+      export const getCanonicalSlug: (category: string, localizedSlug: string, locale: string) => string | undefined;
+      export const config: import('@otrodigital/astro-i18n-next').LocaleConfig;
+      export const defaultLocale: string;
+      export const locales: string[];
+      export const localeLabels: Record<string, string>;
+      export const localeHtmlLang: Record<string, string>;
+    }
+    ```
+
+3. **Add middleware** for locale detection in `src/middleware.ts`:
+
+    ```ts
+    import { createI18nMiddleware } from '@otrodigital/astro-i18n-next';
+    import { config } from 'virtual:i18n';
+
+    export const onRequest = createI18nMiddleware(config);
+    ```
+
+    This sets `Astro.locals.locale` on every request based on the URL prefix.
+
+4. **Use in components**:
+
+    ```astro
+    ---
+    import { t, localePath, locales } from 'virtual:i18n';
+    const locale = Astro.locals.locale;
+    ---
+
+    <h1>{t(locale, 'home.title')}</h1>
+    <a href={localePath(locale, '/about/')}>
+      {t(locale, 'nav.about')}
+    </a>
+    ```
+
+5. **Optional: export translated slugs** from `.astro` pages:
+
+    ```astro
+    ---
+    export const slugs = { en: 'about', es: 'sobre' };
+    import { t, localePath } from 'virtual:i18n';
+    const locale = Astro.locals.locale;
+    ---
+    ```
+
+    Pages without a `slugs` export use the filename as the slug for all locales.
+
+</Steps>
+
+## Create your translation files
+
+Create JSON files for each locale:
+
+<Tabs>
+  <TabItem label="src/i18n/en.json">
+    ```json
+    {
+      "home": {
+        "title": "Welcome"
+      },
+      "nav": {
+        "about": "About",
+        "contact": "Contact"
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="src/i18n/es.json">
+    ```json
+    {
+      "home": {
+        "title": "Bienvenido"
+      },
+      "nav": {
+        "about": "Acerca de",
+        "contact": "Contacto"
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## What happens at build time
+
+With this setup, Astro generates:
+
+| English (default) | Spanish |
+|---|---|
+| `/` | `/es/` |
+| `/about/` | `/es/sobre/` |
+| `/contact/` | `/es/contact/` (no slug export — uses filename) |
+
+The default locale (`en`) has no prefix. All other locales are prefixed (e.g., `/es/`).

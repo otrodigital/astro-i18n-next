@@ -1,0 +1,62 @@
+---
+title: Translated Routes
+description: How locale-prefixed URL routing works with astro-i18n-next.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+`astro-i18n-next` generates locale-specific routes at build time. The default locale has no URL prefix, while all other locales are prefixed.
+
+## How it works
+
+Given a page `src/pages/about.astro` with:
+
+```astro
+---
+export const slugs = { en: 'about', es: 'sobre' };
+---
+```
+
+The integration generates these routes:
+
+| Locale | URL | Astro entrypoint |
+|--------|-----|-----------------|
+| `en` (default) | `/about/` | `src/pages/about.astro` |
+| `es` | `/es/sobre/` | `src/pages/about.astro` |
+
+Both routes render the same component — the locale is available via `Astro.locals.locale`.
+
+## Using `localePath()`
+
+`localePath` translates a canonical (default-locale) path to the correct locale-specific URL:
+
+```ts
+import { localePath } from 'virtual:i18n';
+
+localePath('en', '/about/');              // "/about/"
+localePath('es', '/about/');              // "/es/sobre/"
+localePath('es', '/saunas/model-165/');   // "/es/saunas/modelo-165/"
+```
+
+It handles both page slugs and content slugs, and works with nested paths.
+
+:::tip
+Always use canonical (English) paths as the second argument. `localePath` takes care of translating each path segment.
+:::
+
+## Nested routes
+
+For nested pages like `src/pages/saunas/index.astro`, only the final slug segment is translated. The directory structure stays the same:
+
+```
+/saunas/            → /es/saunas/           (directory not translated)
+/saunas/model-165/  → /es/saunas/modelo-165/ (content slug translated)
+```
+
+## No dynamic routes needed
+
+Unlike other i18n approaches, you don't need `[...slug].astro` catch-all routes. The integration uses Astro's `injectRoute()` API to create concrete routes for every locale at build time. This means:
+
+- Full static prerendering
+- No runtime route matching
+- Each route maps to a known `.astro` component

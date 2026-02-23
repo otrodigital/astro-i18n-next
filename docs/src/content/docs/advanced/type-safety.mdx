@@ -1,0 +1,91 @@
+---
+title: Type Safety
+description: TypeScript integration and type-safe patterns.
+---
+
+`astro-i18n-next` is written in TypeScript and provides type declarations for the virtual module.
+
+## Declaring the virtual module
+
+Add the `virtual:i18n` module declaration to `src/env.d.ts`:
+
+```ts
+/// <reference types="astro/client" />
+
+declare module 'virtual:i18n' {
+  export const t: (locale: string, key: string) => string;
+  export const localePath: (locale: string, path: string) => string;
+  export const switchLocalePath: (currentPath: string, targetLocale: string) => string;
+  export const getLocaleFromPath: (pathname: string) => string;
+  export const localized: <T>(field: Record<string, T>, locale: string) => T;
+  export const getLocalizedSlug: (category: string, canonicalSlug: string, locale: string) => string;
+  export const getCanonicalSlug: (category: string, localizedSlug: string, locale: string) => string | undefined;
+  export const config: import('@otrodigital/astro-i18n-next').LocaleConfig;
+  export const defaultLocale: string;
+  export const locales: string[];
+  export const localeLabels: Record<string, string>;
+  export const localeHtmlLang: Record<string, string>;
+}
+```
+
+This gives you full autocomplete and type checking for all `virtual:i18n` imports.
+
+## Typing `Astro.locals`
+
+To type the `locale` property set by the middleware:
+
+```ts
+// src/env.d.ts
+declare namespace App {
+  interface Locals {
+    locale: string;
+  }
+}
+```
+
+## Content schemas with Zod
+
+When using the multilingual content loader, define Zod schemas that match the localized field structure:
+
+```ts
+import { z } from 'astro:content';
+
+// A field with required English and optional Spanish
+const localizedString = z.object({
+  en: z.string(),
+  es: z.string().optional(),
+});
+
+// A field with required English and optional other locales
+const localizedField = <T extends z.ZodType>(schema: T) =>
+  z.object({
+    en: schema,
+    es: schema.optional(),
+  });
+
+const saunaSchema = z.object({
+  name: localizedString,
+  slugs: localizedString,
+  image: z.string(),
+  description: localizedString,
+  published: z.coerce.date(),
+  bodyHtml: z.record(z.string()).optional(),
+});
+```
+
+## Importing types
+
+All TypeScript interfaces are exported from the package:
+
+```ts
+import type {
+  LocaleConfig,
+  I18nConfig,
+  I18nInstance,
+  SlugMap,
+  PageEntry,
+  I18nextOptions,
+} from '@otrodigital/astro-i18n-next';
+```
+
+See the [Types reference](/reference/types/) for full interface definitions.

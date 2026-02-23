@@ -1,0 +1,117 @@
+---
+title: Types
+description: TypeScript interfaces and types exported by the package.
+---
+
+All types are exported from the package's main entry point:
+
+```ts
+import type { LocaleConfig, I18nConfig, SlugMap } from '@otrodigital/astro-i18n-next';
+```
+
+## `LocaleConfig`
+
+Base configuration for locale settings.
+
+```ts
+interface LocaleConfig {
+  defaultLocale: string;
+  locales: string[];
+  localeLabels: Record<string, string>;
+  localeHtmlLang: Record<string, string>;
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `defaultLocale` | Default locale code (e.g., `'en'`) |
+| `locales` | All supported locale codes |
+| `localeLabels` | Human-readable names (e.g., `{ en: 'English' }`) |
+| `localeHtmlLang` | HTML `lang` values (e.g., `{ en: 'en' }`) |
+
+## `SlugMap`
+
+Maps canonical slugs to locale-specific slugs.
+
+```ts
+type SlugMap = Record<string, Record<string, string>>;
+```
+
+**Example:**
+
+```ts
+const slugMap: SlugMap = {
+  'about': { en: 'about', es: 'sobre' },
+  'model-165': { en: 'model-165', es: 'modelo-165' },
+};
+```
+
+## `PageEntry`
+
+Metadata for a discovered page.
+
+```ts
+interface PageEntry {
+  entrypoint: string;
+  slugs: Record<string, string>;
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `entrypoint` | Astro component path (e.g., `'src/pages/about.astro'`) |
+| `slugs` | Locale-specific URL slugs for this page |
+
+## `I18nextOptions`
+
+Configuration for i18next plugins and custom init options.
+
+```ts
+interface I18nextOptions {
+  plugins?: any[];
+  options?: Record<string, unknown>;
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `plugins` | i18next plugins (e.g., `[ICU]`) — not serializable |
+| `options` | Extra `i18next.init()` options — serializable |
+
+## `I18nConfig`
+
+Full configuration for `createI18n()`. Extends `LocaleConfig`.
+
+```ts
+interface I18nConfig extends LocaleConfig {
+  translations: Record<string, Record<string, unknown>>;
+  slugMaps?: Record<string, SlugMap>;
+  pagesDir?: string;
+  contentDirs?: Record<string, string>;
+  i18next?: I18nextOptions;
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `translations` | Translation objects per locale |
+| `slugMaps` | Manual slug maps (merged with auto-discovered) |
+| `pagesDir` | Pages directory for auto-discovery |
+| `contentDirs` | Content directories for slug auto-discovery |
+| `i18next` | i18next plugins and options |
+
+## `I18nInstance`
+
+The shape of the i18n helpers object (matches `virtual:i18n` exports).
+
+```ts
+interface I18nInstance {
+  t: (locale: string, key: string) => string;
+  localePath: (locale: string, path: string) => string;
+  switchLocalePath: (currentPath: string, targetLocale: string) => string;
+  getLocaleFromPath: (pathname: string) => string;
+  localized: <T>(field: Record<string, T>, locale: string) => T;
+  getLocalizedSlug: (category: string, canonicalSlug: string, locale: string) => string;
+  getCanonicalSlug: (category: string, localizedSlug: string, locale: string) => string | undefined;
+}
+```

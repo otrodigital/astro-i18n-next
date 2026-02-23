@@ -1,0 +1,73 @@
+---
+title: Custom i18next Options
+description: Deep customization of the i18next translation engine.
+---
+
+`astro-i18n-next` uses i18next under the hood. You can customize its behavior through the `i18next` configuration field.
+
+## Default configuration
+
+The built-in translator initializes i18next with these defaults:
+
+```ts
+{
+  lng: defaultLocale,
+  fallbackLng: defaultLocale,
+  resources: {
+    en: { translation: enTranslations },
+    es: { translation: esTranslations },
+    // ... one per locale
+  },
+  interpolation: {
+    escapeValue: false,  // Safe for Astro's set:html
+  },
+  returnNull: false,     // Missing keys return the key string
+}
+```
+
+## Adding custom options
+
+Pass extra options via `i18next.options`:
+
+```js
+createI18n({
+  // ...
+  i18next: {
+    options: {
+      supportedLngs: ['en', 'es'],
+      interpolation: {
+        prefix: '{{',
+        suffix: '}}',
+      },
+    },
+  },
+})
+```
+
+These are merged with the defaults using shallow merge. Your values take priority.
+
+## Isolated instances
+
+Each call to `createTranslator()` creates a new, isolated i18next instance using `i18next.createInstance()`. This means:
+
+- Multiple calls won't interfere with each other
+- It's safe to use in SSR contexts
+- You can create different translators with different configs if needed
+
+## Plugin limitations
+
+i18next plugins passed via `i18next.plugins` are used during the initial `createTranslator()` call, but they are **not serializable**. This means:
+
+- Plugins work at build time when `createI18n` executes
+- Plugins are **not available** in the `virtual:i18n` module (which is serialized code)
+- Use `i18next.options` for any configuration that needs to survive serialization
+
+## Fallback behavior
+
+The fallback chain works as follows:
+
+1. Look up the key in the requested locale
+2. If not found, look up the key in `defaultLocale`
+3. If still not found, return the key string itself
+
+This ensures your UI never shows blank content — at worst, it shows the English translation or the key name.

@@ -1,0 +1,75 @@
+---
+title: Astro i18n Next
+description: Complete i18n integration for Astro 5 static sites.
+template: splash
+hero:
+  tagline: Translated URL routing, content localization, multilingual markdown, and i18next integration — all through a single <code>createI18n()</code> call.
+  actions:
+    - text: Get Started
+      link: /getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/AnotherDigital/astro-i18n-next
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Features
+
+<CardGrid stagger>
+  <Card title="Translated URL Routing" icon="rocket">
+    Automatic locale-prefixed paths for all your pages. `/about/` becomes `/es/sobre/` — no dynamic slugs or catch-all routes needed.
+  </Card>
+
+  <Card title="Virtual Module" icon="puzzle">
+    Import `t`, `localePath`, `switchLocalePath`, and more from `virtual:i18n`. One import, all the i18n helpers you need.
+  </Card>
+
+  <Card title="Multilingual Markdown" icon="document">
+    Write all locales in a single markdown file with YAML frontmatter and `&lt;!-- locale:es --&gt;` body markers. Powered by Astro 5's Content Loader API.
+  </Card>
+
+  <Card title="i18next Integration" icon="translate">
+    Full i18next support with dot-notation keys, fallback chains, and plugin extensibility (ICU, interpolation, and more).
+  </Card>
+
+  <Card title="Page Slug Translation" icon="pencil">
+    Export `slugs` from `.astro` pages to define per-locale URL segments. Auto-discovered at build time — no config needed.
+  </Card>
+
+  <Card title="Fully Static" icon="star">
+    Designed for Astro's static output. All routes are prerendered with zero runtime overhead.
+  </Card>
+</CardGrid>
+
+## Quick Example
+
+```js
+// astro.config.mjs
+import { createI18n } from '@otrodigital/astro-i18n-next';
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+  })],
+});
+```
+
+```astro
+---
+// Any .astro component
+import { t, localePath } from 'virtual:i18n';
+const locale = Astro.locals.locale;
+---
+
+<h1>{t(locale, 'home.title')}</h1>
+<a href={localePath(locale, '/about/')}>{t(locale, 'nav.about')}</a>
+```

@@ -1,0 +1,76 @@
+---
+title: Project Structure
+description: How to organize your Astro project for multilingual support.
+---
+
+Here's the recommended directory layout for an Astro project using `@otrodigital/astro-i18n-next`:
+
+```
+src/
+├── i18n/
+│   ├── en.json              # English translations
+│   └── es.json              # Spanish translations
+├── content/
+│   └── saunas/              # Multilingual markdown content
+│       ├── model-165.md
+│       └── model-200.md
+├── pages/
+│   ├── index.astro          # Homepage
+│   ├── about.astro          # Static page (can export slugs)
+│   └── saunas/
+│       └── index.astro      # Collection listing page
+├── middleware.ts             # Locale detection middleware
+└── env.d.ts                 # Type declarations for virtual:i18n
+```
+
+## Translation files
+
+Translation files are plain JSON objects with nested keys. They are imported in `astro.config.mjs` and passed to `createI18n()`.
+
+```
+src/i18n/
+├── en.json      # { "nav": { "about": "About" } }
+└── es.json      # { "nav": { "about": "Acerca de" } }
+```
+
+Keys support dot-notation access: `t(locale, 'nav.about')`.
+
+## Pages directory
+
+The `pagesDir` option tells the integration where to scan for `.astro` files. Each page can optionally export translated slugs:
+
+```astro
+---
+// src/pages/about.astro
+export const slugs = { en: 'about', es: 'sobre' };
+---
+```
+
+Pages without a `slugs` export use the filename as the slug for all locales.
+
+:::tip
+Dynamic routes (files with `[` in the name) are automatically skipped during page discovery.
+:::
+
+## Content directories
+
+The `contentDirs` option maps collection names to directories containing multilingual markdown files:
+
+```js
+contentDirs: {
+  saunas: 'src/content/saunas',
+  products: 'src/content/products',
+}
+```
+
+Each markdown file contains localized frontmatter and body content. See the [Multilingual Content](/guides/multilingual-content/) guide for the file format.
+
+## Key files
+
+| File | Purpose |
+|------|---------|
+| `astro.config.mjs` | Integration setup with `createI18n()` |
+| `src/env.d.ts` | TypeScript declarations for `virtual:i18n` |
+| `src/middleware.ts` | Locale detection via `createI18nMiddleware()` |
+| `src/i18n/*.json` | Translation key-value files per locale |
+| `src/content/*/` | Multilingual markdown collections |

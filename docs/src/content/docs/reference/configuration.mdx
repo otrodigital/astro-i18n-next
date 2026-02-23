@@ -1,0 +1,139 @@
+---
+title: Configuration
+description: Complete reference for the I18nConfig options.
+---
+
+The `createI18n()` function accepts a single configuration object of type `I18nConfig`.
+
+## Required fields
+
+### `defaultLocale`
+
+**Type:** `string`
+
+The default language code. Pages in this locale are served without a URL prefix.
+
+```js
+defaultLocale: 'en'
+```
+
+### `locales`
+
+**Type:** `string[]`
+
+Array of all supported locale codes, including the default.
+
+```js
+locales: ['en', 'es', 'fr']
+```
+
+### `localeLabels`
+
+**Type:** `Record<string, string>`
+
+Human-readable display names for each locale. Used in language switchers.
+
+```js
+localeLabels: { en: 'English', es: 'Español', fr: 'Français' }
+```
+
+### `localeHtmlLang`
+
+**Type:** `Record<string, string>`
+
+HTML `lang` attribute values for each locale.
+
+```js
+localeHtmlLang: { en: 'en', es: 'es', fr: 'fr' }
+```
+
+### `translations`
+
+**Type:** `Record<string, Record<string, unknown>>`
+
+Translation key-value objects for each locale. Typically imported from JSON files.
+
+```js
+import en from './src/i18n/en.json' with { type: 'json' };
+import es from './src/i18n/es.json' with { type: 'json' };
+
+// ...
+translations: { en, es }
+```
+
+## Optional fields
+
+### `pagesDir`
+
+**Type:** `string | undefined`
+
+Relative path from the project root to the pages directory. When set, the integration scans `.astro` files for `export const slugs` declarations to build the page slug map.
+
+```js
+pagesDir: 'src/pages'
+```
+
+### `contentDirs`
+
+**Type:** `Record<string, string> | undefined`
+
+Map of collection names to relative directory paths. Each directory is scanned for markdown files with `slugs` in their YAML frontmatter.
+
+```js
+contentDirs: {
+  saunas: 'src/content/saunas',
+  products: 'src/content/products',
+}
+```
+
+### `slugMaps`
+
+**Type:** `Record<string, SlugMap> | undefined`
+
+Manually defined slug maps. Merged with auto-discovered maps (manual takes priority).
+
+```js
+slugMaps: {
+  pages: {
+    about: { en: 'about', es: 'sobre' },
+  },
+}
+```
+
+### `i18next`
+
+**Type:** `I18nextOptions | undefined`
+
+Custom i18next plugins and init options.
+
+```js
+i18next: {
+  plugins: [ICU],
+  options: {
+    supportedLngs: ['en', 'es'],
+  },
+}
+```
+
+See the [i18next Plugins](/guides/i18next-plugins/) guide for details.
+
+## Full example
+
+```js
+import { defineConfig } from 'astro/config';
+import { createI18n } from '@otrodigital/astro-i18n-next';
+import en from './src/i18n/en.json' with { type: 'json' };
+import es from './src/i18n/es.json' with { type: 'json' };
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+    contentDirs: { saunas: 'src/content/saunas' },
+  })],
+});
+```

@@ -1,0 +1,65 @@
+---
+title: createI18n()
+description: La función principal de integración que configura todo.
+---
+
+```ts
+function createI18n(config: I18nConfig): AstroIntegration
+```
+
+Crea una integración de Astro que configura el enrutamiento i18n y proporciona un módulo `virtual:i18n`. Este es el punto de entrada principal del paquete.
+
+## Qué hace
+
+1. **Auto-descubre slugs de páginas** desde `pagesDir` via `loadPageMapSync`
+2. **Auto-descubre slugs de contenido** desde `contentDirs` via `loadSlugMapSync`
+3. **Inyecta rutas de idioma** para todos los idiomas no predeterminados usando la API `injectRoute()` de Astro
+4. **Sirve un módulo Vite `virtual:i18n`** exportando todos los helpers y valores de configuración de i18n
+
+## Uso
+
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import { createI18n } from '@otrodigital/astro-i18n-next';
+import en from './src/i18n/en.json' with { type: 'json' };
+import es from './src/i18n/es.json' with { type: 'json' };
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+    contentDirs: { saunas: 'src/content/saunas' },
+  })],
+});
+```
+
+## Parámetros
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `config` | `I18nConfig` | Configuración completa de i18n. Ver [Configuración](/es/reference/configuration/). |
+
+## Valor de retorno
+
+Devuelve un objeto `AstroIntegration` que pasas al array `integrations` en tu configuración de Astro. La integración:
+
+- Configura los ajustes i18n integrados de Astro (`prefixDefaultLocale: false`, `redirectToDefaultLocale: true`)
+- Inyecta una ruta para cada página en cada idioma no predeterminado, usando el slug traducido
+- Registra un plugin de Vite que resuelve las importaciones de `virtual:i18n`
+
+## El plugin de Vite
+
+La integración incluye un plugin de Vite que sirve un módulo virtual en `virtual:i18n`. Este módulo se genera en tiempo de compilación y contiene:
+
+- Función de traducción pre-inicializada (`t`)
+- Helpers de ruta con los mapas de slugs incorporados
+- Helper de contenido con el idioma predeterminado incorporado
+- Funciones de resolución de slugs
+- Todos los valores de configuración de idioma
+
+Esto significa que los componentes pueden hacer `import { t, localePath } from 'virtual:i18n'` sin ninguna configuración en tiempo de ejecución.

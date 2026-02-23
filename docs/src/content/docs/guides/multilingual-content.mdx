@@ -1,0 +1,105 @@
+---
+title: Multilingual Content
+description: Write all locales in a single markdown file with the multilingual content loader.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The multilingual content loader lets you write all locale variants of a content entry in a single markdown file, using YAML frontmatter for structured fields and HTML comment markers for body content.
+
+## Markdown file format
+
+```md
+---
+name:
+  en: Model 165
+  es: Modelo 165
+slugs:
+  en: model-165
+  es: modelo-165
+image: /images/model-165.jpg
+description:
+  en: Compact sauna solution
+  es: Solución de sauna compacta
+published: 2024-01-01
+---
+
+English body content with **markdown**.
+
+<!-- locale:es -->
+
+Contenido en español con **markdown**.
+```
+
+### Frontmatter rules
+
+- **Localized fields** use an object with locale keys: `{ en: "...", es: "..." }`
+- **Shared fields** are plain values: `image: /images/model-165.jpg`
+- You can mix both in the same frontmatter
+
+### Body rules
+
+- Content **before the first marker** belongs to the default locale
+- Each `<!-- locale:XX -->` marker starts a new locale section
+- Body content is parsed with `marked` and returned as HTML in a `bodyHtml` record
+
+## Setting up the loader
+
+### 1. Define the collection
+
+```ts
+// src/content.config.ts
+import { defineCollection, z } from 'astro:content';
+import { createMultilingualLoader } from '@otrodigital/astro-i18n-next';
+
+const saunas = defineCollection({
+  loader: createMultilingualLoader({ contentDir: 'src/content/saunas' }),
+  schema: z.object({
+    name: z.object({ en: z.string(), es: z.string().optional() }),
+    slugs: z.object({ en: z.string(), es: z.string().optional() }),
+    image: z.string(),
+    description: z.object({ en: z.string(), es: z.string().optional() }),
+    published: z.coerce.date(),
+    bodyHtml: z.record(z.string()).optional(),
+  }),
+});
+
+export const collections = { saunas };
+```
+
+### 2. Use in templates
+
+```astro
+---
+import { getCollection } from 'astro:content';
+import { localized } from 'virtual:i18n';
+
+const locale = Astro.locals.locale;
+const saunas = await getCollection('saunas');
+---
+
+{saunas.map(sauna => (
+  <article>
+    <h2>{localized(sauna.data.name, locale)}</h2>
+    <p>{localized(sauna.data.description, locale)}</p>
+    <div set:html={sauna.data.bodyHtml?.[locale]} />
+  </article>
+))}
+```
+
+## The `localized()` helper
+
+The `localized()` function extracts the locale-specific value from a multilingual field object, falling back to the default locale:
+
+```ts
+import { localized } from 'virtual:i18n';
+
+localized({ en: 'Hello', es: 'Hola' }, 'es');  // "Hola"
+localized({ en: 'Hello' }, 'es');               // "Hello" (fallback)
+```
+
+It works with any value type — strings, arrays, objects.
+
+## Slug auto-discovery
+
+When you specify `contentDirs` in the `createI18n` config, the integration automatically reads the `slugs` field from each markdown file's frontmatter to build the slug map. This means `localePath` and `switchLocalePath` can translate content URLs without any extra configuration.

@@ -1,0 +1,109 @@
+---
+title: Funciones Independientes
+description: Uso de las funciones de bajo nivel sin la integración completa.
+---
+
+Aunque `createI18n()` es la configuración recomendada, todas las funciones subyacentes se exportan individualmente. Esto es útil para scripts de compilación personalizados, pruebas, o componer tu propia integración.
+
+## `createTranslator(translations, defaultLocale, i18nextConfig?)`
+
+Inicializa i18next y devuelve una función de traducción.
+
+```ts
+import { createTranslator } from '@otrodigital/astro-i18n-next';
+
+const t = createTranslator(
+  { en: enJson, es: esJson },
+  'en'
+);
+
+t('en', 'nav.about');    // "About"
+t('es', 'nav.about');    // "Acerca de"
+t('es', 'missing.key');  // Cae al valor en inglés
+```
+
+**Características:**
+- Soporta claves con notación de punto (`'section.key'`)
+- Cae al `defaultLocale` para traducciones faltantes
+- HTML no se escapa (seguro para `set:html`)
+- Crea una instancia aislada de i18next (seguro para múltiples llamadas)
+
+## `createRouteHelpers(defaultLocale, locales, slugMaps)`
+
+Devuelve `localePath`, `switchLocalePath` y `getLocaleFromPath`. Ver [Helpers de Ruta](/es/reference/route-helpers/).
+
+```ts
+import { createRouteHelpers } from '@otrodigital/astro-i18n-next';
+
+const { localePath, switchLocalePath, getLocaleFromPath } =
+  createRouteHelpers('en', ['en', 'es'], slugMaps);
+```
+
+## `createSlugResolver(slugMaps, defaultLocale)`
+
+Devuelve `getLocalizedSlug`, `getCanonicalSlug` y `getAllSlugPairs`. Ver [Resolvedor de Slugs](/es/reference/slug-resolver/).
+
+```ts
+import { createSlugResolver } from '@otrodigital/astro-i18n-next';
+
+const { getLocalizedSlug, getCanonicalSlug } =
+  createSlugResolver(slugMaps, 'en');
+```
+
+## `createContentHelper(defaultLocale)`
+
+Devuelve la función `localized()`.
+
+```ts
+import { createContentHelper } from '@otrodigital/astro-i18n-next';
+
+const localized = createContentHelper('en');
+localized({ en: 'Hello', es: 'Hola' }, 'es');  // "Hola"
+```
+
+## `createI18nIntegration({ config, pages })`
+
+Integración de Astro de bajo nivel que configura el enrutamiento i18n. Usada internamente por `createI18n`.
+
+```ts
+import { createI18nIntegration } from '@otrodigital/astro-i18n-next';
+
+const integration = createI18nIntegration({
+  config: { defaultLocale: 'en', locales: ['en', 'es'], ... },
+  pages: discoveredPages,
+});
+```
+
+**Qué hace:**
+1. Configura los ajustes i18n integrados de Astro
+2. Inyecta rutas para cada idioma no predeterminado usando `injectRoute()`
+
+## `loadPageMapSync(pagesDir, locales)`
+
+Escanea sincrónicamente un directorio de páginas en busca de archivos `.astro` y construye el mapa de páginas.
+
+```ts
+import { loadPageMapSync } from '@otrodigital/astro-i18n-next';
+
+const { pages, pageSlugMap } = loadPageMapSync('src/pages', ['en', 'es']);
+```
+
+- `pagesDir` es una **ruta relativa** desde la raíz del proyecto
+- Omite rutas dinámicas (archivos/directorios que contienen `[`)
+- Extrae `export const slugs = { ... }` del frontmatter de las páginas
+
+## `loadSlugMapSync(contentDir)`
+
+Lee sincrónicamente archivos markdown y extrae mapas de slugs del frontmatter YAML.
+
+```ts
+import { join } from 'node:path';
+import { loadSlugMapSync } from '@otrodigital/astro-i18n-next';
+
+const slugMap = loadSlugMapSync(join(process.cwd(), 'src/content/saunas'));
+// { 'model-165': { en: 'model-165', es: 'modelo-165' }, ... }
+```
+
+- `contentDir` debe ser una **ruta absoluta**
+- Lee solo archivos `.md`
+- Extrae el campo `slugs` del frontmatter YAML

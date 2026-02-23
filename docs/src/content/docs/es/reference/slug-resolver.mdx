@@ -1,0 +1,88 @@
+---
+title: Resolvedor de Slugs
+description: Referencia API para las funciones de resolución de slugs.
+---
+
+```ts
+function createSlugResolver(
+  slugMaps: Record<string, SlugMap>,
+  defaultLocale: string
+): {
+  getLocalizedSlug: (category: string, canonicalSlug: string, locale: string) => string;
+  getCanonicalSlug: (category: string, localizedSlug: string, locale: string) => string | undefined;
+  getAllSlugPairs: (category: string, locale: string) => Array<{ canonical: string; localized: string }>;
+}
+```
+
+Devuelve funciones para resolver slugs entre formas canónicas (idioma predeterminado) y localizadas. Al usar `createI18n`, las primeras dos funciones están disponibles desde `virtual:i18n`.
+
+## `getLocalizedSlug(category, canonicalSlug, locale)`
+
+Traduce un slug canónico a un slug específico del idioma.
+
+**Parámetros:**
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `category` | `string` | Categoría del mapa de slugs (ej., `'pages'`, `'saunas'`) |
+| `canonicalSlug` | `string` | El slug del idioma predeterminado |
+| `locale` | `string` | Idioma objetivo |
+
+**Devuelve:** `string` — el slug localizado, o el slug canónico si no existe traducción
+
+**Ejemplos:**
+
+```ts
+getLocalizedSlug('saunas', 'model-165', 'es');  // "modelo-165"
+getLocalizedSlug('saunas', 'model-165', 'en');  // "model-165"
+getLocalizedSlug('pages', 'about', 'es');        // "sobre"
+```
+
+## `getCanonicalSlug(category, localizedSlug, locale)`
+
+Búsqueda inversa — encuentra el slug canónico a partir de uno localizado.
+
+**Parámetros:**
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `category` | `string` | Categoría del mapa de slugs |
+| `localizedSlug` | `string` | El slug específico del idioma |
+| `locale` | `string` | Idioma origen |
+
+**Devuelve:** `string | undefined` — el slug canónico, o `undefined` si no se encuentra
+
+**Ejemplos:**
+
+```ts
+getCanonicalSlug('saunas', 'modelo-165', 'es');  // "model-165"
+getCanonicalSlug('saunas', 'model-165', 'en');   // "model-165"
+getCanonicalSlug('saunas', 'unknown', 'es');     // undefined
+```
+
+## `getAllSlugPairs(category, locale)`
+
+Devuelve todos los pares de slugs canónicos/localizados para una categoría e idioma.
+
+**Parámetros:**
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `category` | `string` | Categoría del mapa de slugs |
+| `locale` | `string` | Idioma objetivo |
+
+**Devuelve:** `Array<{ canonical: string; localized: string }>`
+
+**Ejemplo:**
+
+```ts
+getAllSlugPairs('saunas', 'es');
+// [
+//   { canonical: 'model-165', localized: 'modelo-165' },
+//   { canonical: 'model-200', localized: 'modelo-200' },
+// ]
+```
+
+:::note
+`getAllSlugPairs` está disponible desde la función standalone `createSlugResolver` pero **no se exporta** via el módulo `virtual:i18n`.
+:::

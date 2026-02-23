@@ -1,0 +1,76 @@
+---
+title: Estructura del Proyecto
+description: Cómo organizar tu proyecto Astro para soporte multilingüe.
+---
+
+Esta es la estructura de directorios recomendada para un proyecto Astro usando `@otrodigital/astro-i18n-next`:
+
+```
+src/
+├── i18n/
+│   ├── en.json              # Traducciones en inglés
+│   └── es.json              # Traducciones en español
+├── content/
+│   └── saunas/              # Contenido markdown multilingüe
+│       ├── model-165.md
+│       └── model-200.md
+├── pages/
+│   ├── index.astro          # Página de inicio
+│   ├── about.astro          # Página estática (puede exportar slugs)
+│   └── saunas/
+│       └── index.astro      # Página de listado de colección
+├── middleware.ts             # Middleware de detección de idioma
+└── env.d.ts                 # Declaraciones de tipos para virtual:i18n
+```
+
+## Archivos de traducción
+
+Los archivos de traducción son objetos JSON planos con claves anidadas. Se importan en `astro.config.mjs` y se pasan a `createI18n()`.
+
+```
+src/i18n/
+├── en.json      # { "nav": { "about": "About" } }
+└── es.json      # { "nav": { "about": "Acerca de" } }
+```
+
+Las claves soportan acceso con notación de punto: `t(locale, 'nav.about')`.
+
+## Directorio de páginas
+
+La opción `pagesDir` le indica a la integración dónde buscar archivos `.astro`. Cada página puede opcionalmente exportar slugs traducidos:
+
+```astro
+---
+// src/pages/about.astro
+export const slugs = { en: 'about', es: 'sobre' };
+---
+```
+
+Las páginas sin exportación de `slugs` usan el nombre del archivo como slug para todos los idiomas.
+
+:::tip
+Las rutas dinámicas (archivos con `[` en el nombre) se omiten automáticamente durante el descubrimiento de páginas.
+:::
+
+## Directorios de contenido
+
+La opción `contentDirs` mapea nombres de colección a directorios que contienen archivos markdown multilingües:
+
+```js
+contentDirs: {
+  saunas: 'src/content/saunas',
+  products: 'src/content/products',
+}
+```
+
+Cada archivo markdown contiene frontmatter localizado y contenido del cuerpo. Consulta la guía de [Contenido Multilingüe](/es/guides/multilingual-content/) para el formato de archivo.
+
+## Archivos clave
+
+| Archivo | Propósito |
+|---------|-----------|
+| `astro.config.mjs` | Configuración de la integración con `createI18n()` |
+| `src/env.d.ts` | Declaraciones TypeScript para `virtual:i18n` |
+| `src/middleware.ts` | Detección de idioma via `createI18nMiddleware()` |
+| `src/i18n/*.json` | Archivos de traducción clave-valor por idioma |
+| `src/content/*/` | Colecciones de markdown multilingüe |

@@ -1,0 +1,105 @@
+---
+title: Contenido Multilingüe
+description: Escribe todos los idiomas en un solo archivo markdown con el cargador de contenido multilingüe.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+El cargador de contenido multilingüe te permite escribir todas las variantes de idioma de una entrada de contenido en un solo archivo markdown, usando frontmatter YAML para campos estructurados y marcadores de comentarios HTML para el contenido del cuerpo.
+
+## Formato del archivo markdown
+
+```md
+---
+name:
+  en: Model 165
+  es: Modelo 165
+slugs:
+  en: model-165
+  es: modelo-165
+image: /images/model-165.jpg
+description:
+  en: Compact sauna solution
+  es: Solución de sauna compacta
+published: 2024-01-01
+---
+
+English body content with **markdown**.
+
+<!-- locale:es -->
+
+Contenido en español con **markdown**.
+```
+
+### Reglas del frontmatter
+
+- **Campos localizados** usan un objeto con claves de idioma: `{ en: "...", es: "..." }`
+- **Campos compartidos** son valores simples: `image: /images/model-165.jpg`
+- Puedes mezclar ambos en el mismo frontmatter
+
+### Reglas del cuerpo
+
+- El contenido **antes del primer marcador** pertenece al idioma predeterminado
+- Cada marcador `<!-- locale:XX -->` inicia una nueva sección de idioma
+- Las secciones se parsean con `marked` y se devuelven como HTML en un registro `bodyHtml`
+
+## Configurando el loader
+
+### 1. Define la colección
+
+```ts
+// src/content.config.ts
+import { defineCollection, z } from 'astro:content';
+import { createMultilingualLoader } from '@otrodigital/astro-i18n-next';
+
+const saunas = defineCollection({
+  loader: createMultilingualLoader({ contentDir: 'src/content/saunas' }),
+  schema: z.object({
+    name: z.object({ en: z.string(), es: z.string().optional() }),
+    slugs: z.object({ en: z.string(), es: z.string().optional() }),
+    image: z.string(),
+    description: z.object({ en: z.string(), es: z.string().optional() }),
+    published: z.coerce.date(),
+    bodyHtml: z.record(z.string()).optional(),
+  }),
+});
+
+export const collections = { saunas };
+```
+
+### 2. Usa en plantillas
+
+```astro
+---
+import { getCollection } from 'astro:content';
+import { localized } from 'virtual:i18n';
+
+const locale = Astro.locals.locale;
+const saunas = await getCollection('saunas');
+---
+
+{saunas.map(sauna => (
+  <article>
+    <h2>{localized(sauna.data.name, locale)}</h2>
+    <p>{localized(sauna.data.description, locale)}</p>
+    <div set:html={sauna.data.bodyHtml?.[locale]} />
+  </article>
+))}
+```
+
+## El helper `localized()`
+
+La función `localized()` extrae el valor específico del idioma de un objeto de campo multilingüe, con fallback al idioma predeterminado:
+
+```ts
+import { localized } from 'virtual:i18n';
+
+localized({ en: 'Hello', es: 'Hola' }, 'es');  // "Hola"
+localized({ en: 'Hello' }, 'es');               // "Hello" (fallback)
+```
+
+Funciona con cualquier tipo de valor — strings, arrays, objetos.
+
+## Auto-descubrimiento de slugs
+
+Cuando especificas `contentDirs` en la configuración de `createI18n`, la integración lee automáticamente el campo `slugs` del frontmatter de cada archivo markdown para construir el mapa de slugs. Esto significa que `localePath` y `switchLocalePath` pueden traducir URLs de contenido sin configuración adicional.

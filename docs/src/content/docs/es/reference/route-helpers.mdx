@@ -1,0 +1,94 @@
+---
+title: Helpers de Ruta
+description: Referencia API para localePath, switchLocalePath y getLocaleFromPath.
+---
+
+```ts
+function createRouteHelpers(
+  defaultLocale: string,
+  locales: string[],
+  slugMaps: Record<string, SlugMap>
+): {
+  localePath: (locale: string, path: string) => string;
+  switchLocalePath: (currentPath: string, targetLocale: string) => string;
+  getLocaleFromPath: (pathname: string) => string;
+}
+```
+
+Devuelve tres funciones para generación de URLs con soporte de idioma. Al usar `createI18n`, estas están pre-configuradas y disponibles desde `virtual:i18n`.
+
+## `localePath(locale, path)`
+
+Traduce una ruta canónica (idioma predeterminado) a una URL específica del idioma.
+
+**Parámetros:**
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `locale` | `string` | Código del idioma objetivo |
+| `path` | `string` | Ruta canónica (URLs del idioma predeterminado, ej. `/about/`) |
+
+**Devuelve:** `string` — la ruta localizada
+
+**Ejemplos:**
+
+```ts
+localePath('en', '/about/');              // "/about/"
+localePath('es', '/about/');              // "/es/sobre/"
+localePath('es', '/saunas/model-165/');   // "/es/saunas/modelo-165/"
+```
+
+**Comportamiento:**
+- Para el idioma predeterminado, devuelve la ruta sin cambios
+- Para otros idiomas, agrega el prefijo de idioma y traduce cada segmento de slug usando los mapas de slugs
+- Funciona tanto con slugs de páginas como de contenido
+
+## `switchLocalePath(currentPath, targetLocale)`
+
+Convierte una ruta de cualquier idioma a un idioma objetivo. Esta es la función a usar para selectores de idioma.
+
+**Parámetros:**
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `currentPath` | `string` | Ruta en cualquier idioma (ej. `/es/sobre/`) |
+| `targetLocale` | `string` | Código del idioma objetivo |
+
+**Devuelve:** `string` — la ruta en el idioma objetivo
+
+**Ejemplos:**
+
+```ts
+switchLocalePath('/es/sobre/', 'en');                  // "/about/"
+switchLocalePath('/about/', 'es');                      // "/es/sobre/"
+switchLocalePath('/es/saunas/modelo-165/', 'en');      // "/saunas/model-165/"
+```
+
+**Comportamiento:**
+1. Detecta el idioma origen desde la ruta
+2. Resuelve cada segmento de slug a su forma canónica
+3. Traduce al idioma objetivo usando `localePath`
+
+## `getLocaleFromPath(pathname)`
+
+Extrae el idioma de una ruta URL verificando el primer segmento.
+
+**Parámetros:**
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `pathname` | `string` | Ruta URL (ej. `/es/sobre/`) |
+
+**Devuelve:** `string` — el código del idioma
+
+**Ejemplos:**
+
+```ts
+getLocaleFromPath('/es/sobre/');  // "es"
+getLocaleFromPath('/about/');     // "en" (predeterminado)
+getLocaleFromPath('/fr/contact/'); // "fr"
+```
+
+**Comportamiento:**
+- Verifica si el primer segmento de la ruta coincide con algún idioma configurado
+- Si no se encuentra coincidencia, devuelve `defaultLocale`

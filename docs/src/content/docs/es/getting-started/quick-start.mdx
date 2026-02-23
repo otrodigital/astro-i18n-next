@@ -1,0 +1,143 @@
+---
+title: Inicio Rápido
+description: Configura un sitio Astro multilingüe en 5 pasos.
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Esta guía te lleva paso a paso para configurar `@otrodigital/astro-i18n-next` desde cero. Al finalizar, tendrás enrutamiento con URLs traducidas y traducciones con i18next funcionando.
+
+<Steps>
+
+1. **Agrega la integración** en `astro.config.mjs`:
+
+    ```js
+    // astro.config.mjs
+    import { defineConfig } from 'astro/config';
+    import { createI18n } from '@otrodigital/astro-i18n-next';
+    import en from './src/i18n/en.json' with { type: 'json' };
+    import es from './src/i18n/es.json' with { type: 'json' };
+
+    export default defineConfig({
+      integrations: [createI18n({
+        defaultLocale: 'en',
+        locales: ['en', 'es'],
+        localeLabels: { en: 'English', es: 'Español' },
+        localeHtmlLang: { en: 'en', es: 'es' },
+        translations: { en, es },
+        pagesDir: 'src/pages',
+        contentDirs: { saunas: 'src/content/saunas' },
+      })],
+    });
+    ```
+
+    La integración automáticamente:
+    - Escanea `pagesDir` en busca de archivos `.astro` y construye el mapa de slugs de páginas
+    - Escanea `contentDirs` en busca de mapas de slugs en markdown
+    - Inyecta rutas localizadas para todos los idiomas no predeterminados
+    - Proporciona un módulo `virtual:i18n` con todos los helpers de i18n
+
+2. **Agrega las declaraciones de tipos** en `src/env.d.ts`:
+
+    ```ts
+    /// <reference types="astro/client" />
+
+    declare module 'virtual:i18n' {
+      export const t: (locale: string, key: string) => string;
+      export const localePath: (locale: string, path: string) => string;
+      export const switchLocalePath: (currentPath: string, targetLocale: string) => string;
+      export const getLocaleFromPath: (pathname: string) => string;
+      export const localized: <T>(field: Record<string, T>, locale: string) => T;
+      export const getLocalizedSlug: (category: string, canonicalSlug: string, locale: string) => string;
+      export const getCanonicalSlug: (category: string, localizedSlug: string, locale: string) => string | undefined;
+      export const config: import('@otrodigital/astro-i18n-next').LocaleConfig;
+      export const defaultLocale: string;
+      export const locales: string[];
+      export const localeLabels: Record<string, string>;
+      export const localeHtmlLang: Record<string, string>;
+    }
+    ```
+
+3. **Agrega el middleware** para detección de idioma en `src/middleware.ts`:
+
+    ```ts
+    import { createI18nMiddleware } from '@otrodigital/astro-i18n-next';
+    import { config } from 'virtual:i18n';
+
+    export const onRequest = createI18nMiddleware(config);
+    ```
+
+    Esto establece `Astro.locals.locale` en cada solicitud basándose en el prefijo de la URL.
+
+4. **Usa en componentes**:
+
+    ```astro
+    ---
+    import { t, localePath, locales } from 'virtual:i18n';
+    const locale = Astro.locals.locale;
+    ---
+
+    <h1>{t(locale, 'home.title')}</h1>
+    <a href={localePath(locale, '/about/')}>
+      {t(locale, 'nav.about')}
+    </a>
+    ```
+
+5. **Opcional: exporta slugs traducidos** desde páginas `.astro`:
+
+    ```astro
+    ---
+    export const slugs = { en: 'about', es: 'sobre' };
+    import { t, localePath } from 'virtual:i18n';
+    const locale = Astro.locals.locale;
+    ---
+    ```
+
+    Las páginas sin exportación de `slugs` usan el nombre del archivo como slug para todos los idiomas.
+
+</Steps>
+
+## Crea tus archivos de traducción
+
+Crea archivos JSON para cada idioma:
+
+<Tabs>
+  <TabItem label="src/i18n/en.json">
+    ```json
+    {
+      "home": {
+        "title": "Welcome"
+      },
+      "nav": {
+        "about": "About",
+        "contact": "Contact"
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="src/i18n/es.json">
+    ```json
+    {
+      "home": {
+        "title": "Bienvenido"
+      },
+      "nav": {
+        "about": "Acerca de",
+        "contact": "Contacto"
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Qué sucede en tiempo de compilación
+
+Con esta configuración, Astro genera:
+
+| Inglés (predeterminado) | Español |
+|---|---|
+| `/` | `/es/` |
+| `/about/` | `/es/sobre/` |
+| `/contact/` | `/es/contact/` (sin exportación de slug — usa el nombre del archivo) |
+
+El idioma predeterminado (`en`) no tiene prefijo. Todos los demás idiomas llevan prefijo (ej., `/es/`).

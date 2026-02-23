@@ -1,0 +1,94 @@
+---
+title: Route Helpers
+description: API reference for localePath, switchLocalePath, and getLocaleFromPath.
+---
+
+```ts
+function createRouteHelpers(
+  defaultLocale: string,
+  locales: string[],
+  slugMaps: Record<string, SlugMap>
+): {
+  localePath: (locale: string, path: string) => string;
+  switchLocalePath: (currentPath: string, targetLocale: string) => string;
+  getLocaleFromPath: (pathname: string) => string;
+}
+```
+
+Returns three functions for locale-aware URL generation. When using `createI18n`, these are pre-configured and available from `virtual:i18n`.
+
+## `localePath(locale, path)`
+
+Translates a canonical (default-locale) path to a locale-specific URL.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `locale` | `string` | Target locale code |
+| `path` | `string` | Canonical path (default-locale URLs, e.g. `/about/`) |
+
+**Returns:** `string` — the localized path
+
+**Examples:**
+
+```ts
+localePath('en', '/about/');              // "/about/"
+localePath('es', '/about/');              // "/es/sobre/"
+localePath('es', '/saunas/model-165/');   // "/es/saunas/modelo-165/"
+```
+
+**Behavior:**
+- For the default locale, returns the path unchanged
+- For other locales, adds the locale prefix and translates each slug segment using the slug maps
+- Works with both page slugs and content slugs
+
+## `switchLocalePath(currentPath, targetLocale)`
+
+Converts a path from any locale to a target locale. This is the function to use for language switchers.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `currentPath` | `string` | Path in any locale (e.g. `/es/sobre/`) |
+| `targetLocale` | `string` | Target locale code |
+
+**Returns:** `string` — the path in the target locale
+
+**Examples:**
+
+```ts
+switchLocalePath('/es/sobre/', 'en');                  // "/about/"
+switchLocalePath('/about/', 'es');                      // "/es/sobre/"
+switchLocalePath('/es/saunas/modelo-165/', 'en');      // "/saunas/model-165/"
+```
+
+**Behavior:**
+1. Detects the source locale from the path
+2. Resolves each slug segment back to its canonical form
+3. Translates to the target locale using `localePath`
+
+## `getLocaleFromPath(pathname)`
+
+Extracts the locale from a URL pathname by checking the first path segment.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `pathname` | `string` | URL pathname (e.g. `/es/sobre/`) |
+
+**Returns:** `string` — the locale code
+
+**Examples:**
+
+```ts
+getLocaleFromPath('/es/sobre/');  // "es"
+getLocaleFromPath('/about/');     // "en" (default)
+getLocaleFromPath('/fr/contact/'); // "fr"
+```
+
+**Behavior:**
+- Checks if the first path segment matches any configured locale
+- If no match is found, returns `defaultLocale`

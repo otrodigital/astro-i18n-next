@@ -1,0 +1,81 @@
+---
+title: i18next Plugins
+description: Extend translations with i18next plugins like ICU message format.
+---
+
+`astro-i18n-next` uses i18next under the hood for translations. You can extend it with custom plugins and configuration.
+
+## Adding a plugin
+
+Pass plugins via the `i18next` config field:
+
+```ts
+// astro.config.mjs
+import ICU from 'i18next-icu';
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    i18next: {
+      plugins: [ICU],
+      options: {
+        supportedLngs: ['en', 'es'],
+      },
+    },
+  })],
+});
+```
+
+## ICU message format example
+
+With `i18next-icu`, you can use ICU syntax in your translation files:
+
+```json
+{
+  "items": "{count, plural, =0 {No items} one {# item} other {# items}}",
+  "greeting": "Hello, {name}!"
+}
+```
+
+```astro
+---
+import { t } from 'virtual:i18n';
+const locale = Astro.locals.locale;
+---
+
+<p>{t(locale, 'items', { count: 5 })}</p>
+<p>{t(locale, 'greeting', { name: 'World' })}</p>
+```
+
+## Custom i18next options
+
+The `i18next.options` field is passed directly to `i18next.init()`. You can use it to configure any i18next behavior:
+
+```ts
+i18next: {
+  options: {
+    supportedLngs: ['en', 'es'],
+    interpolation: {
+      prefix: '{{',
+      suffix: '}}',
+    },
+  },
+}
+```
+
+:::caution
+i18next plugins are not serializable and **won't be available in the virtual module**. They are only used during the initial `createTranslator()` call at build time. Use `i18next.options` for any configuration that needs to survive serialization.
+:::
+
+## Default i18next behavior
+
+The built-in translator is configured with:
+
+- `interpolation.escapeValue: false` — HTML is not escaped (safe for Astro's `set:html`)
+- `returnNull: false` — missing keys return the key string, never `null`
+- Fallback to `defaultLocale` for any missing translation keys
+- Isolated i18next instance (safe to call `createTranslator` multiple times)

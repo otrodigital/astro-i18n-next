@@ -1,0 +1,70 @@
+---
+title: Locale Detection
+description: How the middleware detects the current locale from the URL.
+---
+
+The locale detection middleware extracts the current locale from the URL pathname and makes it available on every request via `Astro.locals.locale`.
+
+## Setup
+
+```ts
+// src/middleware.ts
+import { createI18nMiddleware } from '@otrodigital/astro-i18n-next';
+import { config } from 'virtual:i18n';
+
+export const onRequest = createI18nMiddleware(config);
+```
+
+## How it works
+
+The middleware checks the first segment of the URL pathname against the configured locales:
+
+| URL | Detected locale |
+|-----|----------------|
+| `/about/` | `en` (default) |
+| `/es/sobre/` | `es` |
+| `/es/saunas/modelo-165/` | `es` |
+| `/contact/` | `en` (default) |
+
+If no locale prefix is found, it defaults to `defaultLocale`.
+
+## Using the locale
+
+Access the detected locale in any `.astro` component:
+
+```astro
+---
+const locale = Astro.locals.locale;
+---
+
+<html lang={locale}>
+  <body>
+    <p>Current locale: {locale}</p>
+  </body>
+</html>
+```
+
+## TypeScript typing
+
+To type `Astro.locals.locale`, add this to your `src/env.d.ts`:
+
+```ts
+declare namespace App {
+  interface Locals {
+    locale: string;
+  }
+}
+```
+
+## Programmatic locale detection
+
+You can also extract the locale from a URL without the middleware using `getLocaleFromPath`:
+
+```ts
+import { getLocaleFromPath } from 'virtual:i18n';
+
+getLocaleFromPath('/es/sobre/');  // "es"
+getLocaleFromPath('/about/');     // "en" (default)
+```
+
+This is useful in scripts, API routes, or any context where the middleware hasn't run.
