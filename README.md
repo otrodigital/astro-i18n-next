@@ -8,16 +8,6 @@ A complete internationalization module for Astro 5 static sites. Provides transl
 npm install @otrodigital/astro-i18n-next
 ```
 
-Or as a local dependency:
-
-```json
-{
-  "dependencies": {
-    "@otrodigital/astro-i18n-next": "file:./modules/astro-i18n-next"
-  }
-}
-```
-
 ### Peer dependencies
 
 ```

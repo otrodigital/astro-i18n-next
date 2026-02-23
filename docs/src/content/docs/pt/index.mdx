@@ -1,0 +1,79 @@
+---
+title: Astro i18n Next
+description: Integração i18n completa para sites estáticos Astro 5.
+template: splash
+hero:
+  tagline: Roteamento com URLs traduzidas, localização de conteúdo, markdown multilíngue e integração com i18next — tudo através de uma única chamada a <code>createI18n()</code>.
+  actions:
+    - text: Começar
+      link: /pt/getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: Ver no GitHub
+      link: https://github.com/otrodigital/astro-i18n-next
+      icon: external
+      variant: minimal
+    - text: Por OTRO Digital
+      link: https://otro.digital
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Funcionalidades
+
+<CardGrid stagger>
+  <Card title="Roteamento com URLs Traduzidas" icon="rocket">
+    Caminhos com prefixo de idioma automáticos para todas as suas páginas. `/about/` se torna `/es/sobre/` — sem slugs dinâmicos ou rotas catch-all.
+  </Card>
+
+  <Card title="Módulo Virtual" icon="puzzle">
+    Importe `t`, `localePath`, `switchLocalePath` e mais de `virtual:i18n`. Uma importação, todos os helpers de i18n que você precisa.
+  </Card>
+
+  <Card title="Markdown Multilíngue" icon="document">
+    Escreva todos os idiomas em um único arquivo markdown com frontmatter YAML e marcadores `&lt;!-- locale:es --&gt;` no corpo. Alimentado pela API Content Loader do Astro 5.
+  </Card>
+
+  <Card title="Integração com i18next" icon="translate">
+    Suporte completo ao i18next com chaves em notação de ponto, cadeias de fallback e extensibilidade via plugins (ICU, interpolação e mais).
+  </Card>
+
+  <Card title="Tradução de Slugs de Página" icon="pencil">
+    Exporte `slugs` de páginas `.astro` para definir segmentos de URL por idioma. Descobertos automaticamente no build — sem configuração necessária.
+  </Card>
+
+  <Card title="Totalmente Estático" icon="star">
+    Projetado para a saída estática do Astro. Todas as rotas são pré-renderizadas sem overhead em tempo de execução.
+  </Card>
+</CardGrid>
+
+## Exemplo Rápido
+
+```js
+// astro.config.mjs
+import { createI18n } from '@otrodigital/astro-i18n-next';
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+  })],
+});
+```
+
+```astro
+---
+// Qualquer componente .astro
+import { t, localePath } from 'virtual:i18n';
+const locale = Astro.locals.locale;
+---
+
+<h1>{t(locale, 'home.title')}</h1>
+<a href={localePath(locale, '/about/')}>{t(locale, 'nav.about')}</a>
+```

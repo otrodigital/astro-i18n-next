@@ -72,3 +72,150 @@ const currentPath = Astro.url.pathname;
 ```
 
 This tells search engines about all available language versions of each page.
+
+## Language detection banner
+
+You can go further and detect the user's browser language to suggest switching. This example uses [`i18next-browser-languagedetector`](https://github.com/i18next/i18next-browser-languageDetector) to detect the preferred language client-side and shows a banner if it doesn't match the current page locale.
+
+### Translation keys
+
+Add banner strings to your translation files:
+
+```json
+// src/i18n/en.json
+{
+  "languageBanner": {
+    "message": "This page is also available in your language.",
+    "switch": "Switch",
+    "dismiss": "Stay"
+  }
+}
+```
+
+```json
+// src/i18n/es.json
+{
+  "languageBanner": {
+    "message": "Esta página también está disponible en tu idioma.",
+    "switch": "Cambiar",
+    "dismiss": "Quedarme"
+  }
+}
+```
+
+### The component
+
+```astro
+---
+// src/components/LanguageBanner.astro
+import { locales, localeLabels } from 'virtual:i18n';
+import en from '../i18n/en.json';
+import es from '../i18n/es.json';
+
+const bannerStrings = {
+  en: en.languageBanner,
+  es: es.languageBanner,
+};
+---
+
+<div
+  id="language-banner"
+  class="language-banner hidden"
+  role="alert"
+  data-locales={JSON.stringify(locales)}
+  data-locale-labels={JSON.stringify(localeLabels)}
+  data-banner-strings={JSON.stringify(bannerStrings)}
+>
+  <p id="banner-message"></p>
+  <div>
+    <button id="banner-dismiss"></button>
+    <a id="banner-switch" href="#"></a>
+  </div>
+</div>
+
+<script>
+  import LanguageDetector from 'i18next-browser-languagedetector';
+
+  const banner = document.getElementById('language-banner')!;
+  const locales: string[] = JSON.parse(banner.dataset.locales!);
+  const bannerStrings: Record<
+    string,
+    { message: string; switch: string; dismiss: string }
+  > = JSON.parse(banner.dataset.bannerStrings!);
+
+  // Detect browser language (synchronous, no i18next init needed)
+  const detector = new LanguageDetector(null, {
+    order: ['navigator'],
+    caches: [],
+  });
+  const rawDetected = detector.detect();
+
+  // Normalize "en-US" → "en", "es-419" → "es"
+  function toLocaleCode(lang: string | undefined): string | undefined {
+    if (!lang) return undefined;
+    const base = lang.split('-')[0].toLowerCase();
+    return locales.find((l) => l === base);
+  }
+
+  const detectedLangs = Array.isArray(rawDetected)
+    ? rawDetected
+    : [rawDetected];
+  const detectedCode = detectedLangs.map(toLocaleCode).find(Boolean);
+  const currentCode = toLocaleCode(document.documentElement.lang);
+
+  // Show banner if detected locale differs and user hasn't chosen
+  if (detectedCode && currentCode && detectedCode !== currentCode) {
+    const storedPreference = localStorage.getItem('preferred-locale');
+
+    if (!storedPreference) {
+      // Find the alternate URL from hreflang links in <head>
+      const alternateLink = document.querySelector(
+        `link[rel="alternate"][hreflang="${detectedCode}"]`
+      ) as HTMLLinkElement | null;
+
+      if (alternateLink) {
+        const strings = bannerStrings[detectedCode];
+        document.getElementById('banner-message')!.textContent =
+          strings.message;
+
+        const switchEl = document.getElementById(
+          'banner-switch'
+        ) as HTMLAnchorElement;
+        switchEl.textContent = strings.switch;
+        switchEl.href = alternateLink.href;
+
+        document.getElementById('banner-dismiss')!.textContent =
+          strings.dismiss;
+
+        // Show the banner
+        banner.classList.remove('hidden');
+
+        // "Switch" — save preference and navigate
+        switchEl.addEventListener('click', () => {
+          localStorage.setItem('preferred-locale', detectedCode);
+        });
+
+        // "Dismiss" — save current locale preference and hide
+        document
+          .getElementById('banner-dismiss')!
+          .addEventListener('click', () => {
+            localStorage.setItem('preferred-locale', currentCode);
+            banner.classList.add('hidden');
+          });
+      }
+    }
+  }
+</script>
+```
+
+### How it works
+
+1. **Detects browser language** using `i18next-browser-languagedetector` (navigator only, no cookies)
+2. **Compares** the detected language against the current page's `<html lang="...">`
+3. **Finds the alternate URL** from the `<link rel="alternate" hreflang="...">` tags you added in the [hreflang section above](#adding-hreflang-alternate-links)
+4. **Shows the banner** in the *detected* language so the user can read it
+5. **Remembers the choice** in `localStorage` so the banner doesn't reappear
+
+:::tip
+Install the detector as a dependency: `npm install i18next-browser-languagedetector`. It works standalone — no i18next initialization needed.
+:::

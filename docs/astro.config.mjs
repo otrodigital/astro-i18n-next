@@ -17,6 +17,26 @@ export default defineConfig({
           label: 'Español',
           lang: 'es',
         },
+        fr: {
+          label: 'Français',
+          lang: 'fr',
+        },
+        de: {
+          label: 'Deutsch',
+          lang: 'de',
+        },
+        pt: {
+          label: 'Português',
+          lang: 'pt',
+        },
+        ja: {
+          label: '日本語',
+          lang: 'ja',
+        },
+        zh: {
+          label: '中文',
+          lang: 'zh',
+        },
       },
       social: {
         github: 'https://github.com/otrodigital/astro-i18n-next',
@@ -24,7 +44,14 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Getting Started',
-          translations: { es: 'Primeros Pasos' },
+          translations: {
+            es: 'Primeros Pasos',
+            fr: 'Démarrage',
+            de: 'Erste Schritte',
+            pt: 'Primeiros Passos',
+            ja: 'はじめに',
+            zh: '快速开始',
+          },
           items: [
             { slug: 'getting-started/installation' },
             { slug: 'getting-started/quick-start' },
@@ -33,7 +60,14 @@ export default defineConfig({
         },
         {
           label: 'Guides',
-          translations: { es: 'Guías' },
+          translations: {
+            es: 'Guías',
+            fr: 'Guides',
+            de: 'Anleitungen',
+            pt: 'Guias',
+            ja: 'ガイド',
+            zh: '指南',
+          },
           items: [
             { slug: 'guides/translated-routes' },
             { slug: 'guides/multilingual-content' },
@@ -45,7 +79,14 @@ export default defineConfig({
         },
         {
           label: 'API Reference',
-          translations: { es: 'Referencia API' },
+          translations: {
+            es: 'Referencia API',
+            fr: 'Référence API',
+            de: 'API-Referenz',
+            pt: 'Referência API',
+            ja: 'APIリファレンス',
+            zh: 'API 参考',
+          },
           items: [
             { slug: 'reference/configuration' },
             { slug: 'reference/create-i18n' },
@@ -59,7 +100,14 @@ export default defineConfig({
         },
         {
           label: 'Advanced',
-          translations: { es: 'Avanzado' },
+          translations: {
+            es: 'Avanzado',
+            fr: 'Avancé',
+            de: 'Fortgeschritten',
+            pt: 'Avançado',
+            ja: '高度な使い方',
+            zh: '高级',
+          },
           collapsed: true,
           items: [
             { slug: 'advanced/standalone-functions' },
@@ -68,6 +116,9 @@ export default defineConfig({
           ],
         },
       ],
+      components: {
+        Head: './src/components/Head.astro',
+      },
     }),
   ],
 });

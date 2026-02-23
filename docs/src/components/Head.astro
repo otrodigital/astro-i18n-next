@@ -1,0 +1,188 @@
+---
+import StarlightHead from '@astrojs/starlight/components/Head.astro';
+---
+
+<StarlightHead {...Astro.props}><slot /></StarlightHead>
+
+<script>
+  import LanguageDetector from 'i18next-browser-languagedetector';
+
+  const SUPPORTED_LOCALES = ['en', 'es', 'fr', 'de', 'pt', 'ja', 'zh'];
+
+  const bannerStrings: Record<string, { message: string; switch: string; dismiss: string }> = {
+    en: {
+      message: 'This page is also available in your language.',
+      switch: 'Switch',
+      dismiss: 'Stay',
+    },
+    es: {
+      message: 'Esta página también está disponible en tu idioma.',
+      switch: 'Cambiar',
+      dismiss: 'Quedarme',
+    },
+    fr: {
+      message: 'Cette page est aussi disponible dans votre langue.',
+      switch: 'Changer',
+      dismiss: 'Rester',
+    },
+    de: {
+      message: 'Diese Seite ist auch in Ihrer Sprache verfügbar.',
+      switch: 'Wechseln',
+      dismiss: 'Bleiben',
+    },
+    pt: {
+      message: 'Esta página também está disponível no seu idioma.',
+      switch: 'Mudar',
+      dismiss: 'Ficar',
+    },
+    ja: {
+      message: 'このページはお使いの言語でもご利用いただけます。',
+      switch: '切り替え',
+      dismiss: 'このまま',
+    },
+    zh: {
+      message: '此页面也提供您的语言版本。',
+      switch: '切换',
+      dismiss: '留下',
+    },
+  };
+
+  // Detect browser language (synchronous, no i18next init needed)
+  const detector = new LanguageDetector(null, {
+    order: ['navigator'],
+    caches: [],
+  });
+  const rawDetected = detector.detect();
+
+  // Normalize "en-US" → "en", "es-419" → "es"
+  function toLocaleCode(lang: string | undefined): string | undefined {
+    if (!lang) return undefined;
+    const base = lang.split('-')[0].toLowerCase();
+    return SUPPORTED_LOCALES.find((l) => l === base);
+  }
+
+  const detectedLangs = Array.isArray(rawDetected) ? rawDetected : [rawDetected];
+  const detectedCode = detectedLangs.map(toLocaleCode).find(Boolean);
+  const currentCode = toLocaleCode(document.documentElement.lang);
+
+  if (detectedCode && currentCode && detectedCode !== currentCode) {
+    const storedPreference = localStorage.getItem('astro-i18n-docs-locale');
+
+    if (!storedPreference) {
+      // Find the alternate URL from hreflang links added by Starlight
+      const alternateLink = document.querySelector(
+        `link[rel="alternate"][hreflang="${detectedCode}"]`
+      ) as HTMLLinkElement | null;
+
+      if (alternateLink) {
+        const strings = bannerStrings[detectedCode];
+
+        // Create the banner dynamically
+        const banner = document.createElement('div');
+        banner.id = 'language-banner';
+        banner.role = 'alert';
+        banner.style.cssText = `
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 100;
+          transform: translateY(100%);
+          transition: transform 0.4s ease-out;
+        `;
+
+        banner.innerHTML = `
+          <div style="
+            background: var(--sl-color-bg-nav);
+            border-top: 1px solid var(--sl-color-hairline-shade);
+            backdrop-filter: blur(12px);
+          ">
+            <div style="
+              max-width: 72rem;
+              margin: 0 auto;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 1rem;
+              padding: 0.75rem 1.5rem;
+              flex-wrap: wrap;
+            ">
+              <p style="
+                margin: 0;
+                font-size: var(--sl-text-sm);
+                color: var(--sl-color-gray-2);
+              ">${strings.message}</p>
+              <div style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                flex-shrink: 0;
+              ">
+                <button id="banner-dismiss" style="
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  font-size: var(--sl-text-xs);
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+                  color: var(--sl-color-gray-3);
+                  padding: 0.375rem 0.75rem;
+                  transition: color 0.2s;
+                ">${strings.dismiss}</button>
+                <a id="banner-switch" href="${alternateLink.href}" style="
+                  display: inline-flex;
+                  align-items: center;
+                  padding: 0.375rem 1rem;
+                  font-size: var(--sl-text-xs);
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+                  text-decoration: none;
+                  border-radius: 999px;
+                  border: 1px solid var(--sl-color-accent);
+                  color: var(--sl-color-accent);
+                  background: transparent;
+                  transition: background 0.2s;
+                ">${strings.switch}</a>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(banner);
+
+        // Animate in
+        requestAnimationFrame(() => {
+          banner.style.transform = 'translateY(0)';
+        });
+
+        // "Switch" — save preference and navigate
+        banner.querySelector('#banner-switch')!.addEventListener('click', () => {
+          localStorage.setItem('astro-i18n-docs-locale', detectedCode);
+        });
+
+        // "Dismiss" — save current locale as preference and hide
+        banner.querySelector('#banner-dismiss')!.addEventListener('click', () => {
+          localStorage.setItem('astro-i18n-docs-locale', currentCode);
+          banner.style.transform = 'translateY(100%)';
+        });
+
+        // Hover effects
+        const dismissBtn = banner.querySelector('#banner-dismiss') as HTMLElement;
+        dismissBtn.addEventListener('mouseenter', () => {
+          dismissBtn.style.color = 'var(--sl-color-white)';
+        });
+        dismissBtn.addEventListener('mouseleave', () => {
+          dismissBtn.style.color = 'var(--sl-color-gray-3)';
+        });
+
+        const switchBtn = banner.querySelector('#banner-switch') as HTMLElement;
+        switchBtn.addEventListener('mouseenter', () => {
+          switchBtn.style.background = 'var(--sl-color-accent-low)';
+        });
+        switchBtn.addEventListener('mouseleave', () => {
+          switchBtn.style.background = 'transparent';
+        });
+      }
+    }
+  }
+</script>

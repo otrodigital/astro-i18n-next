@@ -1,0 +1,79 @@
+---
+title: Astro i18n Next
+description: Astro 5 静的サイトのための完全なi18n統合。
+template: splash
+hero:
+  tagline: 翻訳済みURLルーティング、コンテンツのローカライゼーション、多言語Markdown、i18next統合 — すべて1回の<code>createI18n()</code>呼び出しで。
+  actions:
+    - text: はじめる
+      link: /ja/getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: GitHubで見る
+      link: https://github.com/otrodigital/astro-i18n-next
+      icon: external
+      variant: minimal
+    - text: OTRO Digital
+      link: https://otro.digital
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## 機能
+
+<CardGrid stagger>
+  <Card title="翻訳済みURLルーティング" icon="rocket">
+    すべてのページに自動的なロケールプレフィックスパス。`/about/` が `/es/sobre/` に — 動的slugやキャッチオールルートは不要。
+  </Card>
+
+  <Card title="仮想モジュール" icon="puzzle">
+    `virtual:i18n` から `t`、`localePath`、`switchLocalePath` などをインポート。1つのインポートで必要なi18nヘルパーすべてが利用可能。
+  </Card>
+
+  <Card title="多言語Markdown" icon="document">
+    YAMLフロントマターと `&lt;!-- locale:es --&gt;` ボディマーカーを使用して、1つのMarkdownファイルにすべてのロケールを記述。Astro 5のContent Loader APIを活用。
+  </Card>
+
+  <Card title="i18next統合" icon="translate">
+    ドット記法キー、フォールバックチェーン、プラグイン拡張性（ICU、補間など）を備えた完全なi18nextサポート。
+  </Card>
+
+  <Card title="ページSlug翻訳" icon="pencil">
+    `.astro` ページから `slugs` をエクスポートして、ロケールごとのURLセグメントを定義。ビルド時に自動検出 — 設定不要。
+  </Card>
+
+  <Card title="完全な静的出力" icon="star">
+    Astroの静的出力用に設計。すべてのルートがランタイムオーバーヘッドなしでプリレンダリング。
+  </Card>
+</CardGrid>
+
+## クイック例
+
+```js
+// astro.config.mjs
+import { createI18n } from '@otrodigital/astro-i18n-next';
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+  })],
+});
+```
+
+```astro
+---
+// 任意の .astro コンポーネント
+import { t, localePath } from 'virtual:i18n';
+const locale = Astro.locals.locale;
+---
+
+<h1>{t(locale, 'home.title')}</h1>
+<a href={localePath(locale, '/about/')}>{t(locale, 'nav.about')}</a>
+```

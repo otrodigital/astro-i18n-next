@@ -1,0 +1,79 @@
+---
+title: Astro i18n Next
+description: 适用于 Astro 5 静态站点的完整 i18n 集成。
+template: splash
+hero:
+  tagline: 翻译URL路由、内容本地化、多语言Markdown和i18next集成 — 只需一次 <code>createI18n()</code> 调用。
+  actions:
+    - text: 开始使用
+      link: /zh/getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: 在 GitHub 上查看
+      link: https://github.com/otrodigital/astro-i18n-next
+      icon: external
+      variant: minimal
+    - text: OTRO Digital
+      link: https://otro.digital
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## 功能特性
+
+<CardGrid stagger>
+  <Card title="翻译URL路由" icon="rocket">
+    为所有页面自动添加语言前缀路径。`/about/` 变为 `/es/sobre/` — 无需动态 slug 或通配路由。
+  </Card>
+
+  <Card title="虚拟模块" icon="puzzle">
+    从 `virtual:i18n` 导入 `t`、`localePath`、`switchLocalePath` 等。一次导入，获取所有 i18n 辅助工具。
+  </Card>
+
+  <Card title="多语言 Markdown" icon="document">
+    在单个 Markdown 文件中使用 YAML frontmatter 和 `&lt;!-- locale:es --&gt;` 标记编写所有语言版本。基于 Astro 5 的 Content Loader API。
+  </Card>
+
+  <Card title="i18next 集成" icon="translate">
+    完整的 i18next 支持，包括点号键名、回退链和插件扩展性（ICU、插值等）。
+  </Card>
+
+  <Card title="页面 Slug 翻译" icon="pencil">
+    从 `.astro` 页面导出 `slugs` 来定义每种语言的 URL 段。构建时自动发现 — 无需额外配置。
+  </Card>
+
+  <Card title="完全静态" icon="star">
+    专为 Astro 的静态输出设计。所有路由预渲染，零运行时开销。
+  </Card>
+</CardGrid>
+
+## 快速示例
+
+```js
+// astro.config.mjs
+import { createI18n } from '@otrodigital/astro-i18n-next';
+
+export default defineConfig({
+  integrations: [createI18n({
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    localeLabels: { en: 'English', es: 'Español' },
+    localeHtmlLang: { en: 'en', es: 'es' },
+    translations: { en, es },
+    pagesDir: 'src/pages',
+  })],
+});
+```
+
+```astro
+---
+// 任意 .astro 组件
+import { t, localePath } from 'virtual:i18n';
+const locale = Astro.locals.locale;
+---
+
+<h1>{t(locale, 'home.title')}</h1>
+<a href={localePath(locale, '/about/')}>{t(locale, 'nav.about')}</a>
+```
