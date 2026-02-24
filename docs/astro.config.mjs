@@ -74,6 +74,7 @@ export default defineConfig({
             { slug: 'guides/slug-translation' },
             { slug: 'guides/locale-detection' },
             { slug: 'guides/language-switcher' },
+            { slug: 'guides/seo-components' },
             { slug: 'guides/i18next-plugins' },
           ],
         },
