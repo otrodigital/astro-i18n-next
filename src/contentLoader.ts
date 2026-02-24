@@ -2,7 +2,6 @@ import type { Loader } from 'astro/loaders';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import yaml from 'js-yaml';
-import { marked } from 'marked';
 
 interface ContentLoaderOptions {
   contentDir: string;
@@ -27,14 +26,23 @@ function parseFrontmatter(raw: string): { frontmatter: Record<string, any>; body
  * locale's markdown to HTML. Content before the first marker belongs to
  * the default locale.
  */
-function splitAndRenderBody(body: string, defaultLocale: string): Record<string, string> {
+async function splitAndRenderBody(body: string, defaultLocale: string): Promise<Record<string, string>> {
+  let marked: typeof import('marked');
+  try {
+    marked = await import('marked');
+  } catch {
+    throw new Error(
+      'marked is required for createMultilingualLoader. Install it: npm install marked',
+    );
+  }
+
   const parts = body.split(/<!--\s*locale:(\w+)\s*-->/);
   const result: Record<string, string> = {};
 
   // First segment (index 0) is the default locale content
   const defaultBody = parts[0].trim();
   if (defaultBody) {
-    result[defaultLocale] = marked.parse(defaultBody) as string;
+    result[defaultLocale] = marked.marked.parse(defaultBody) as string;
   }
 
   // Remaining pairs: odd indices are locale codes, even indices are content
@@ -42,7 +50,7 @@ function splitAndRenderBody(body: string, defaultLocale: string): Record<string,
     const locale = parts[i];
     const content = (parts[i + 1] ?? '').trim();
     if (content) {
-      result[locale] = marked.parse(content) as string;
+      result[locale] = marked.marked.parse(content) as string;
     }
   }
 
@@ -73,7 +81,7 @@ export function createMultilingualLoader(options: ContentLoaderOptions): Loader 
         const raw = await readFile(absolutePath, 'utf-8');
 
         const { frontmatter, body } = parseFrontmatter(raw);
-        const bodyHtml = splitAndRenderBody(body, 'en');
+        const bodyHtml = await splitAndRenderBody(body, 'en');
 
         const data = await parseData({
           id,

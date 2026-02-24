@@ -13,22 +13,24 @@ npm install @otrodigital/astro-i18n-next
 
 Los siguientes paquetes deben estar instalados en tu proyecto:
 
-| Paquete | Versión | Propósito |
-|---------|---------|-----------|
-| `astro` | `>= 5.0.0` | Framework Astro con soporte de enrutamiento i18n |
-| `i18next` | `>= 23.0.0` | Motor de traducción |
-| `js-yaml` | `>= 4.0.0` | Parseo de frontmatter YAML para contenido multilingüe |
-| `marked` | `>= 9.0.0` | Renderizado de Markdown para el cuerpo del contenido |
+| Paquete | Versión | Requerido | Propósito |
+|---------|---------|-----------|-----------|
+| `astro` | `>= 5.0.0` | Sí | Framework Astro con soporte de enrutamiento i18n |
+| `i18next` | `>= 23.0.0` | Sí | Motor de traducción |
+| `js-yaml` | `>= 4.0.0` | Sí | Parseo de frontmatter YAML para contenido multilingüe |
+| `marked` | `>= 9.0.0` | Opcional | Renderizado de Markdown para el cuerpo del contenido |
 
-Instálalos todos de una vez:
+Instala las dependencias requeridas:
 
 ```bash
-npm install astro i18next js-yaml marked
+npm install astro i18next js-yaml
 ```
 
-:::note
-`js-yaml` y `marked` solo son necesarios si usas el cargador de contenido multilingüe (`createMultilingualLoader`). Si solo usas rutas traducidas y traducciones con i18next, puedes omitirlos.
-:::
+Si planeas usar el cargador de contenido multilingüe (`createMultilingualLoader`), también instala `marked`:
+
+```bash
+npm install marked
+```
 
 ## Próximos pasos
 

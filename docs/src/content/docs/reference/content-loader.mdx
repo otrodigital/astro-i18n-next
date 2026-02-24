@@ -11,6 +11,10 @@ function createMultilingualLoader(options: {
 
 An Astro 5 content loader that reads multilingual markdown files from a directory. Each file contains all locale variants — localized YAML frontmatter and body content separated by locale markers.
 
+:::caution[Requires `marked`]
+This feature requires the `marked` package. Install it with `npm install marked` before using `createMultilingualLoader`.
+:::
+
 ## Usage
 
 ```ts

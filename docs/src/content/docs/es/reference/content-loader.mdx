@@ -11,6 +11,10 @@ function createMultilingualLoader(options: {
 
 Un cargador de contenido de Astro 5 que lee archivos markdown multilingües desde un directorio. Cada archivo contiene todas las variantes de idioma — frontmatter YAML localizado y contenido del cuerpo separado por marcadores de idioma.
 
+:::caution[Requiere `marked`]
+Esta funcionalidad requiere el paquete `marked`. Instálalo con `npm install marked` antes de usar `createMultilingualLoader`.
+:::
+
 ## Uso
 
 ```ts
