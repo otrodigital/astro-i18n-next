@@ -1,0 +1,21 @@
+---
+import { locales, defaultLocale, localeHtmlLang, getLocaleFromPath } from 'virtual:i18n';
+import { generateOGLocales } from '@otrodigital/astro-i18n-next';
+
+interface Props {
+  siteUrl: string;
+}
+
+const { current, alternates } = generateOGLocales(
+  Astro.url.pathname,
+  locales,
+  defaultLocale,
+  localeHtmlLang,
+  getLocaleFromPath,
+);
+---
+
+<meta property="og:locale" content={current} />
+{alternates.map((alt) => (
+  <meta property="og:locale:alternate" content={alt} />
+))}

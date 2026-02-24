@@ -9,3 +9,5 @@ export { createI18nIntegration } from './integration.js';
 export { createI18nMiddleware } from './middleware.js';
 export { loadSlugMapSync } from './slugMapLoader.js';
 export { loadPageMapSync } from './pageMapLoader.js';
+export { generateHrefLangs, generateCanonicalURL, generateOGLocales, toOGLocale } from './seo.js';
+export type { HrefLangEntry, OGLocaleResult } from './seo.js';

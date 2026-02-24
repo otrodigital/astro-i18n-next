@@ -1,0 +1,12 @@
+---
+import { generateCanonicalURL } from '@otrodigital/astro-i18n-next';
+
+interface Props {
+  siteUrl: string;
+}
+
+const { siteUrl } = Astro.props;
+const canonical = generateCanonicalURL(Astro.url.pathname, siteUrl);
+---
+
+<link rel="canonical" href={canonical} />

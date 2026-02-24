@@ -1,0 +1,106 @@
+---
+title: Componentes SEO
+description: Componentes opcionales para etiquetas hreflang, URLs canónicas y meta tags de Open Graph para idiomas.
+---
+
+`astro-i18n-next` incluye tres componentes Astro opcionales que generan etiquetas `<head>` esenciales para el SEO de sitios multilingües. Importa solo los que necesites.
+
+## Componentes
+
+### `HrefLangs`
+
+Genera etiquetas `<link rel="alternate" hreflang="..." />` para cada idioma configurado, más una entrada `x-default` que apunta a la versión del idioma predeterminado.
+
+```astro
+---
+import HrefLangs from '@otrodigital/astro-i18n-next/HrefLangs.astro';
+---
+
+<head>
+  <HrefLangs siteUrl="https://example.com" />
+</head>
+```
+
+**Resultado** (para `/about/` con idiomas `en` + `es`):
+
+```html
+<link rel="alternate" hreflang="en" href="https://example.com/about/" />
+<link rel="alternate" hreflang="es" href="https://example.com/es/sobre/" />
+<link rel="alternate" hreflang="x-default" href="https://example.com/about/" />
+```
+
+### `CanonicalURL`
+
+Genera una etiqueta `<link rel="canonical" />` para la página actual.
+
+```astro
+---
+import CanonicalURL from '@otrodigital/astro-i18n-next/CanonicalURL.astro';
+---
+
+<head>
+  <CanonicalURL siteUrl="https://example.com" />
+</head>
+```
+
+**Resultado** (para `/es/sobre/`):
+
+```html
+<link rel="canonical" href="https://example.com/es/sobre/" />
+```
+
+### `OpenGraphLocale`
+
+Genera `<meta property="og:locale" />` para el idioma actual y `<meta property="og:locale:alternate" />` para cada idioma alternativo. Los valores usan el formato `xx_YY` requerido por Open Graph (ej. `en_US`, `es_ES`).
+
+```astro
+---
+import OpenGraphLocale from '@otrodigital/astro-i18n-next/OpenGraphLocale.astro';
+---
+
+<head>
+  <OpenGraphLocale siteUrl="https://example.com" />
+</head>
+```
+
+**Resultado** (para `/about/` con `en` como idioma actual):
+
+```html
+<meta property="og:locale" content="en_US" />
+<meta property="og:locale:alternate" content="es_ES" />
+```
+
+## Ejemplo completo
+
+Usa los tres componentes juntos en tu layout:
+
+```astro
+---
+import HrefLangs from '@otrodigital/astro-i18n-next/HrefLangs.astro';
+import CanonicalURL from '@otrodigital/astro-i18n-next/CanonicalURL.astro';
+import OpenGraphLocale from '@otrodigital/astro-i18n-next/OpenGraphLocale.astro';
+
+const siteUrl = 'https://example.com';
+---
+
+<html>
+  <head>
+    <CanonicalURL siteUrl={siteUrl} />
+    <HrefLangs siteUrl={siteUrl} />
+    <OpenGraphLocale siteUrl={siteUrl} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+```
+
+## Props
+
+Los tres componentes aceptan una única prop requerida:
+
+| Prop | Tipo | Descripción |
+|------|------|-------------|
+| `siteUrl` | `string` | La URL base de tu sitio sin barra final (ej. `"https://example.com"`) |
+
+Los componentes detectan automáticamente la ruta actual desde `Astro.url.pathname` y usan los helpers de rutas de `virtual:i18n` para generar URLs alternativas correctas con slugs traducidos.

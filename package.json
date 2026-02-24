@@ -1,13 +1,16 @@
 {
   "name": "@otrodigital/astro-i18n-next",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Complete i18n integration for Astro 5 static sites",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./HrefLangs.astro": "./src/components/HrefLangs.astro",
+    "./CanonicalURL.astro": "./src/components/CanonicalURL.astro",
+    "./OpenGraphLocale.astro": "./src/components/OpenGraphLocale.astro"
   },
   "files": [
     "dist",
@@ -30,12 +33,15 @@
   "license": "MIT",
   "keywords": [
     "astro",
+    "astro-integration",
+    "withastro",
     "i18n",
     "internationalization",
     "localization",
     "i18next",
     "multilingual",
-    "astro-integration"
+    "utils",
+    "seo"
   ],
   "peerDependencies": {
     "astro": ">=5.0.0",

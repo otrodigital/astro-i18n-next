@@ -1,0 +1,22 @@
+---
+import { locales, defaultLocale, localeHtmlLang, switchLocalePath } from 'virtual:i18n';
+import { generateHrefLangs } from '@otrodigital/astro-i18n-next';
+
+interface Props {
+  siteUrl: string;
+}
+
+const { siteUrl } = Astro.props;
+const entries = generateHrefLangs(
+  Astro.url.pathname,
+  siteUrl,
+  locales,
+  defaultLocale,
+  localeHtmlLang,
+  switchLocalePath,
+);
+---
+
+{entries.map(({ hreflang, href }) => (
+  <link rel="alternate" hreflang={hreflang} href={href} />
+))}
