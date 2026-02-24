@@ -2,6 +2,8 @@
 
 A complete internationalization module for Astro 5 static sites. Provides translated URL routing, content localization, multilingual markdown loading, and i18next-based translations — all through a single `createI18n` integration with a `virtual:i18n` module for component imports.
 
+[Documentation](https://astro-i18n-next.otro.digital) | [GitHub](https://github.com/otrodigital/astro-i18n-next) | [OTRO Digital](https://otro.digital)
+
 ## Install
 
 ```bash
@@ -431,3 +433,9 @@ const { pages, pageSlugMap } = loadPageMapSync('src/pages', ['en', 'es']);
 - Skips dynamic routes (files/directories containing `[`)
 - Pages can optionally export slugs in their frontmatter
 - Pages without a slugs export use the filename as the slug for all locales
+
+---
+
+## License
+
+MIT - Made by [OTRO Digital](https://otro.digital)

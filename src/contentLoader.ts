@@ -2,6 +2,7 @@ import type { Loader } from 'astro/loaders';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import yaml from 'js-yaml';
+import { marked } from 'marked';
 
 interface ContentLoaderOptions {
   contentDir: string;
@@ -27,22 +28,13 @@ function parseFrontmatter(raw: string): { frontmatter: Record<string, any>; body
  * the default locale.
  */
 async function splitAndRenderBody(body: string, defaultLocale: string): Promise<Record<string, string>> {
-  let marked: typeof import('marked');
-  try {
-    marked = await import('marked');
-  } catch {
-    throw new Error(
-      'marked is required for createMultilingualLoader. Install it: npm install marked',
-    );
-  }
-
   const parts = body.split(/<!--\s*locale:(\w+)\s*-->/);
   const result: Record<string, string> = {};
 
   // First segment (index 0) is the default locale content
   const defaultBody = parts[0].trim();
   if (defaultBody) {
-    result[defaultLocale] = marked.marked.parse(defaultBody) as string;
+    result[defaultLocale] = await marked.parse(defaultBody);
   }
 
   // Remaining pairs: odd indices are locale codes, even indices are content
@@ -50,7 +42,7 @@ async function splitAndRenderBody(body: string, defaultLocale: string): Promise<
     const locale = parts[i];
     const content = (parts[i + 1] ?? '').trim();
     if (content) {
-      result[locale] = marked.marked.parse(content) as string;
+      result[locale] = await marked.parse(content);
     }
   }
 
