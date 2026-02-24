@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import type { I18nConfig, PageEntry, SlugMap } from './types';
+import type { I18nConfig, PageEntry, SlugMap } from './types.js';
 import type { AstroIntegration } from 'astro';
-import { createI18nIntegration } from './integration';
-import { loadPageMapSync } from './pageMapLoader';
-import { loadSlugMapSync } from './slugMapLoader';
+import { createI18nIntegration } from './integration.js';
+import { loadPageMapSync } from './pageMapLoader.js';
+import { loadSlugMapSync } from './slugMapLoader.js';
 
 /**
  * Creates a fully configured i18n Astro integration from a single config object.

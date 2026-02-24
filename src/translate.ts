@@ -1,5 +1,5 @@
 import i18next from 'i18next';
-import type { I18nextOptions } from './types';
+import type { I18nextOptions } from './types.js';
 
 /**
  * Initializes i18next with the provided translations, optional plugins,

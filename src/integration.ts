@@ -1,5 +1,5 @@
 import type { AstroIntegration } from 'astro';
-import type { LocaleConfig, PageEntry } from './types';
+import type { LocaleConfig, PageEntry } from './types.js';
 
 interface I18nRoutesOptions {
   config: LocaleConfig;

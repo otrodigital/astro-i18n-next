@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, posix } from 'node:path';
-import type { PageEntry, SlugMap } from './types';
+import type { PageEntry, SlugMap } from './types.js';
 
 /**
  * Recursively collects .astro files, skipping dynamic routes and directories.

@@ -1,4 +1,4 @@
-import type { SlugMap } from './types';
+import type { SlugMap } from './types.js';
 
 /**
  * Creates route helper functions for locale-aware path generation.

@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'astro';
-import type { LocaleConfig } from './types';
+import type { LocaleConfig } from './types.js';
 
 /**
  * Creates Astro middleware that detects the locale from the URL

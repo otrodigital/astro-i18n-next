@@ -1,4 +1,4 @@
-import type { SlugMap } from './types';
+import type { SlugMap } from './types.js';
 
 /**
  * Creates slug resolution functions for a set of named slug maps.

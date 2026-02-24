@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import yaml from 'js-yaml';
-import type { SlugMap } from './types';
+import type { SlugMap } from './types.js';
 
 /**
  * Reads all .md files from a content directory and extracts the `slugs`
