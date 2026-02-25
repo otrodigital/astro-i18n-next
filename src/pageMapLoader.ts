@@ -65,7 +65,9 @@ export function loadPageMapSync(
   const absDir = join(process.cwd(), pagesDir);
   const files = collectAstroFiles(absDir);
   const pages: Record<string, PageEntry> = {};
+  const leafSlugs: Record<string, Record<string, string>> = {};
 
+  // Phase 1: Collect leaf slugs for each page
   for (const filePath of files) {
     const rel = relative(absDir, filePath).replace(/\\/g, '/');
     let key = rel.replace(/\.astro$/, '');
@@ -75,7 +77,8 @@ export function loadPageMapSync(
 
     const entrypoint = posix.join(pagesDir, rel);
 
-    const defaultSlug = key === 'index' ? '' : key;
+    const leaf = key.includes('/') ? key.split('/').pop()! : key;
+    const defaultSlug = key === 'index' ? '' : leaf;
     const defaultSlugs = Object.fromEntries(
       locales.map((l) => [l, defaultSlug]),
     );
@@ -83,10 +86,31 @@ export function loadPageMapSync(
     const raw = readFileSync(filePath, 'utf-8');
     const explicitSlugs = parseSlugsExport(raw);
 
-    pages[key] = {
-      entrypoint,
-      slugs: { ...defaultSlugs, ...(explicitSlugs ?? {}) },
-    };
+    const slugs = { ...defaultSlugs, ...(explicitSlugs ?? {}) };
+    pages[key] = { entrypoint, slugs };
+    leafSlugs[key] = { ...slugs };
+  }
+
+  // Phase 2: Compose full translated paths for nested pages
+  for (const [key, page] of Object.entries(pages)) {
+    if (key === 'index' || !key.includes('/')) continue;
+
+    const segments = key.split('/');
+    const composedSlugs: Record<string, string> = {};
+
+    for (const locale of locales) {
+      const parts: string[] = [];
+
+      for (let i = 0; i < segments.length - 1; i++) {
+        const ancestorKey = segments.slice(0, i + 1).join('/');
+        parts.push(leafSlugs[ancestorKey]?.[locale] ?? segments[i]);
+      }
+
+      parts.push(leafSlugs[key][locale]);
+      composedSlugs[locale] = parts.join('/');
+    }
+
+    page.slugs = composedSlugs;
   }
 
   const pageSlugMap: SlugMap = Object.fromEntries(

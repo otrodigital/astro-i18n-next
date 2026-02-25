@@ -76,6 +76,38 @@ describe('loadPageMapSync', () => {
       expect(pages.index.entrypoint).toBe('pages/index.astro');
       expect(pages.about.entrypoint).toBe('pages/about.astro');
       expect(pages.saunas.entrypoint).toBe('pages/saunas/index.astro');
+      expect(pages['saunas/types'].entrypoint).toBe('pages/saunas/types/index.astro');
+    } finally {
+      process.cwd = originalCwd;
+    }
+  });
+
+  it('composes full path slugs for nested pages with explicit leaf slugs', () => {
+    process.cwd = () => join(import.meta.dirname, '__fixtures__');
+    try {
+      const { pages } = loadPageMapSync('pages', ['en', 'es']);
+
+      // saunas/types/index.astro exports { en: 'types', es: 'tipos' }
+      // Parent saunas has no explicit slugs → defaults to 'saunas'
+      // Composed: saunas/types and saunas/tipos
+      expect(pages['saunas/types'].slugs).toEqual({
+        en: 'saunas/types',
+        es: 'saunas/tipos',
+      });
+    } finally {
+      process.cwd = originalCwd;
+    }
+  });
+
+  it('returns a pageSlugMap with composed slugs for nested pages', () => {
+    process.cwd = () => join(import.meta.dirname, '__fixtures__');
+    try {
+      const { pageSlugMap } = loadPageMapSync('pages', ['en', 'es']);
+
+      expect(pageSlugMap['saunas/types']).toEqual({
+        en: 'saunas/types',
+        es: 'saunas/tipos',
+      });
     } finally {
       process.cwd = originalCwd;
     }

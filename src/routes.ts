@@ -8,6 +8,16 @@ export function createRouteHelpers(
   locales: string[],
   slugMaps: Record<string, SlugMap>,
 ) {
+  // Pre-sort entries by key length descending so composed paths
+  // (e.g. 'services/consulting') are matched before their parents ('services')
+  const sortedSlugMaps: Record<string, [string, Record<string, string>][]> =
+    Object.fromEntries(
+      Object.entries(slugMaps).map(([name, map]) => [
+        name,
+        Object.entries(map).sort(([a], [b]) => b.length - a.length),
+      ]),
+    );
+
   /**
    * Get locale from a URL pathname.
    * '/es/sobre/' → 'es', '/about/' → defaultLocale
@@ -31,8 +41,8 @@ export function createRouteHelpers(
     let result = path;
 
     // Translate slug segments from all slug maps (pages, content collections, etc.)
-    for (const [, map] of Object.entries(slugMaps)) {
-      for (const [canonical, localeMap] of Object.entries(map)) {
+    for (const [, entries] of Object.entries(sortedSlugMaps)) {
+      for (const [canonical, localeMap] of entries) {
         const translated = localeMap[locale] ?? canonical;
         if (translated !== canonical && canonical !== '') {
           const before = result;
@@ -70,8 +80,8 @@ export function createRouteHelpers(
 
     if (currentLocale !== defaultLocale) {
       // Reverse-translate all slug maps back to canonical
-      for (const [, map] of Object.entries(slugMaps)) {
-        for (const [canonical, localeMap] of Object.entries(map)) {
+      for (const [, entries] of Object.entries(sortedSlugMaps)) {
+        for (const [canonical, localeMap] of entries) {
           const translated = localeMap[currentLocale];
           if (translated && translated !== canonical) {
             const before = canonicalPath;
