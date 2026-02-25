@@ -30,30 +30,14 @@ export function createRouteHelpers(
   function localePath(locale: string, path: string): string {
     let result = path;
 
-    // Translate page slug segments
-    const pageMap = slugMaps.pages;
-    if (pageMap) {
-      for (const [canonical, localeMap] of Object.entries(pageMap)) {
+    // Translate slug segments from all slug maps (pages, content collections, etc.)
+    for (const [, map] of Object.entries(slugMaps)) {
+      for (const [canonical, localeMap] of Object.entries(map)) {
         const translated = localeMap[locale] ?? canonical;
         if (translated !== canonical && canonical !== '') {
           const before = result;
           result = result.replace(`/${canonical}/`, `/${translated}/`);
           // Only try end-of-string match if the trailing-slash version didn't match
-          if (result === before) {
-            result = result.replace(new RegExp(`/${canonical}$`), `/${translated}`);
-          }
-        }
-      }
-    }
-
-    // Translate sauna slugs within path
-    const saunaMap = slugMaps.saunas;
-    if (saunaMap) {
-      for (const [canonical, localeMap] of Object.entries(saunaMap)) {
-        const translated = localeMap[locale] ?? canonical;
-        if (translated !== canonical) {
-          const before = result;
-          result = result.replace(`/${canonical}/`, `/${translated}/`);
           if (result === before) {
             result = result.replace(new RegExp(`/${canonical}$`), `/${translated}`);
           }
@@ -85,25 +69,9 @@ export function createRouteHelpers(
     let canonicalPath = basePath;
 
     if (currentLocale !== defaultLocale) {
-      // Reverse page slugs
-      const pageMap = slugMaps.pages;
-      if (pageMap) {
-        for (const [canonical, localeMap] of Object.entries(pageMap)) {
-          const translated = localeMap[currentLocale];
-          if (translated && translated !== canonical) {
-            const before = canonicalPath;
-            canonicalPath = canonicalPath.replace(`/${translated}/`, `/${canonical}/`);
-            if (canonicalPath === before) {
-              canonicalPath = canonicalPath.replace(new RegExp(`/${translated}$`), `/${canonical}`);
-            }
-          }
-        }
-      }
-
-      // Reverse sauna slugs
-      const saunaMap = slugMaps.saunas;
-      if (saunaMap) {
-        for (const [canonical, localeMap] of Object.entries(saunaMap)) {
+      // Reverse-translate all slug maps back to canonical
+      for (const [, map] of Object.entries(slugMaps)) {
+        for (const [canonical, localeMap] of Object.entries(map)) {
           const translated = localeMap[currentLocale];
           if (translated && translated !== canonical) {
             const before = canonicalPath;

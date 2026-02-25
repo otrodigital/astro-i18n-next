@@ -1,6 +1,6 @@
 {
   "name": "@otrodigital/astro-i18n-next",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Complete i18n integration for Astro 5 static sites",
   "type": "module",
   "exports": {
