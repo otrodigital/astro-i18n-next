@@ -12,6 +12,15 @@ export interface PageEntry {
   slugs: Record<string, string>;
 }
 
+export interface ContentRouteConfig {
+  /** Path to the template page (e.g. 'src/pages/case-studies/_[...slug].astro') */
+  template: string;
+  /** Content directory for slug map discovery */
+  contentDir: string;
+  /** Route prefix per locale (e.g. { en: 'case-studies', es: 'estudios-de-caso' }) */
+  prefixes: Record<string, string>;
+}
+
 export interface I18nextOptions {
   /** i18next plugin modules to register via .use() */
   plugins?: any[];
@@ -27,6 +36,8 @@ export interface I18nConfig extends LocaleConfig {
   pagesDir?: string;
   /** Content directories to scan for slug maps (e.g. { saunas: 'src/content/saunas' }) */
   contentDirs?: Record<string, string>;
+  /** Content collection routes with per-locale virtual entrypoints */
+  contentRoutes?: Record<string, ContentRouteConfig>;
   /** i18next plugins and configuration */
   i18next?: I18nextOptions;
 }

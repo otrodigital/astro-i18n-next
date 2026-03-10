@@ -34,7 +34,7 @@ slugs:
 ---
 ```
 
-Estos se descubren cuando especificas `contentDirs` en la configuración:
+Estos se descubren cuando especificas `contentDirs` o `contentRoutes` en la configuración:
 
 ```js
 createI18n({
@@ -42,8 +42,19 @@ createI18n({
   contentDirs: {
     saunas: 'src/content/saunas',
   },
+  contentRoutes: {
+    'case-studies': {
+      template: 'src/pages/case-studies/_[...slug].astro',
+      contentDir: 'src/content/case-studies',
+      prefixes: { en: 'case-studies', es: 'estudios-de-caso' },
+    },
+  },
 })
 ```
+
+:::tip
+Usa `contentDirs` cuando solo necesitas helpers de resolución de slugs (ej., para páginas de listado). Usa `contentRoutes` cuando también necesitas que la integración maneje la inyección de rutas con slugs traducidos por idioma. Consulta [Rutas Traducidas](/es/guides/translated-routes/#rutas-de-colecciones-de-contenido) para más detalles.
+:::
 
 ## Resolviendo slugs
 
@@ -70,10 +81,10 @@ import { getCanonicalSlug } from 'virtual:i18n';
 getCanonicalSlug('saunas', 'modelo-165', 'es');  // "model-165"
 ```
 
-El argumento `category` coincide con la clave usada en `contentDirs` (o `slugMaps` si se proporcionan manualmente).
+El argumento `category` coincide con la clave usada en `contentDirs`, `contentRoutes`, o `slugMaps` (si se proporcionan manualmente).
 
 :::note
-Los slugs de página usan la categoría `"pages"` internamente. Los slugs de contenido usan la clave que definiste en `contentDirs`.
+Los slugs de página usan la categoría `"pages"` internamente. Los slugs de contenido usan la clave que definiste en `contentDirs` o `contentRoutes`.
 :::
 
 ## Mapas de slugs manuales

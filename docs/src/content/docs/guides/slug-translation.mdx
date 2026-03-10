@@ -34,7 +34,7 @@ slugs:
 ---
 ```
 
-These are discovered when you specify `contentDirs` in the config:
+These are discovered when you specify `contentDirs` or `contentRoutes` in the config:
 
 ```js
 createI18n({
@@ -42,8 +42,19 @@ createI18n({
   contentDirs: {
     saunas: 'src/content/saunas',
   },
+  contentRoutes: {
+    'case-studies': {
+      template: 'src/pages/case-studies/_[...slug].astro',
+      contentDir: 'src/content/case-studies',
+      prefixes: { en: 'case-studies', es: 'estudios-de-caso' },
+    },
+  },
 })
 ```
+
+:::tip
+Use `contentDirs` when you only need slug resolution helpers (e.g., for listing pages). Use `contentRoutes` when you also need the integration to handle route injection with per-locale translated slugs. See [Translated Routes](/guides/translated-routes/#content-collection-routes) for details.
+:::
 
 ## Resolving slugs
 
@@ -70,10 +81,10 @@ import { getCanonicalSlug } from 'virtual:i18n';
 getCanonicalSlug('saunas', 'modelo-165', 'es');  // "model-165"
 ```
 
-The `category` argument matches the key used in `contentDirs` (or `slugMaps` if provided manually).
+The `category` argument matches the key used in `contentDirs`, `contentRoutes`, or `slugMaps` (if provided manually).
 
 :::note
-Page slugs use the category `"pages"` internally. Content slugs use the key you defined in `contentDirs`.
+Page slugs use the category `"pages"` internally. Content slugs use the key you defined in `contentDirs` or `contentRoutes`.
 :::
 
 ## Manual slug maps

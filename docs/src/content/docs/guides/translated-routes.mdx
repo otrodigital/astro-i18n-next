@@ -53,10 +53,71 @@ For nested pages like `src/pages/saunas/index.astro`, only the final slug segmen
 /saunas/model-165/  → /es/saunas/modelo-165/ (content slug translated)
 ```
 
-## No dynamic routes needed
+## Content collection routes
 
-Unlike other i18n approaches, you don't need `[...slug].astro` catch-all routes. The integration uses Astro's `injectRoute()` API to create concrete routes for every locale at build time. This means:
+For content collections (blog posts, case studies, etc.) that use dynamic `[...slug]` routes, the integration provides `contentRoutes` to generate per-locale virtual entrypoints. This prevents cross-locale slug pollution — where Spanish slugs appear under English paths and vice versa.
+
+### Setup
+
+1. Rename your dynamic route file with a `_` prefix so Astro ignores it as a filesystem route:
+
+```
+src/pages/case-studies/_[...slug].astro
+```
+
+2. Add `contentRoutes` to your config:
+
+```js
+createI18n({
+  // ...
+  contentRoutes: {
+    'case-studies': {
+      template: 'src/pages/case-studies/_[...slug].astro',
+      contentDir: 'src/content/case-studies',
+      prefixes: { en: 'case-studies', es: 'estudios-de-caso' },
+    },
+  },
+})
+```
+
+3. Use `Astro.props.canonicalSlug` in the template to look up content:
+
+```astro
+---
+// src/pages/case-studies/_[...slug].astro
+import { getEntry } from 'astro:content';
+import { localized } from 'virtual:i18n';
+
+const { canonicalSlug } = Astro.props;
+const locale = Astro.locals.locale;
+const entry = await getEntry('case-studies', canonicalSlug);
+const title = localized(entry.data.title, locale);
+---
+
+<h1>{title}</h1>
+```
+
+### How it works
+
+The integration generates a virtual entrypoint for each locale, each with its own `getStaticPaths()` that returns only that locale's slugs:
+
+| Locale | URL | Slugs returned |
+|--------|-----|---------------|
+| `en` (default) | `/case-studies/[...slug]` | English slugs only |
+| `es` | `/es/estudios-de-caso/[...slug]` | Spanish slugs only |
+
+This ensures:
+
+- `/case-studies/annex-ai-platform/` exists (EN)
+- `/es/estudios-de-caso/annex-plataforma-ia/` exists (ES)
+- `/case-studies/annex-plataforma-ia/` does NOT exist (no cross-locale pollution)
+
+## No dynamic routes needed for static pages
+
+Unlike other i18n approaches, you don't need `[...slug].astro` catch-all routes for static pages. The integration uses Astro's `injectRoute()` API to create concrete routes for every locale at build time. This means:
 
 - Full static prerendering
 - No runtime route matching
 - Each route maps to a known `.astro` component
+
+For content collections that do need dynamic routes, use `contentRoutes` as described above.

@@ -4,6 +4,7 @@ import type { AstroIntegration } from 'astro';
 import { createI18nIntegration } from './integration.js';
 import { loadPageMapSync } from './pageMapLoader.js';
 import { loadSlugMapSync } from './slugMapLoader.js';
+import { createContentRoutePlugin } from './contentRouteVite.js';
 
 /**
  * Creates a fully configured i18n Astro integration from a single config object.
@@ -42,8 +43,15 @@ export function createI18n(config: I18nConfig): AstroIntegration {
     }
   }
 
+  // Load slug maps for content routes (contentRoutes takes precedence over contentDirs for same key)
+  if (config.contentRoutes) {
+    for (const [name, route] of Object.entries(config.contentRoutes)) {
+      slugMaps[name] = loadSlugMapSync(join(process.cwd(), route.contentDir));
+    }
+  }
+
   // Build the route-injection integration
-  const routeIntegration = createI18nIntegration({ config, pages });
+  const routeIntegration = createI18nIntegration({ config, pages, contentRoutes: config.contentRoutes });
 
   // Serialize config data for the virtual module (strip non-serializable fields)
   const serializedConfig = JSON.stringify({
@@ -66,10 +74,8 @@ export function createI18n(config: I18nConfig): AstroIntegration {
           (routeSetup as Function)(hookOptions);
         }
 
-        // Add Vite plugin to serve virtual:i18n
-        hookOptions.updateConfig({
-          vite: {
-            plugins: [{
+        // Add Vite plugins
+        const vitePlugins: any[] = [{
               name: 'i18n-virtual-module',
               resolveId(id: string) {
                 if (id === 'virtual:i18n') return '\0virtual:i18n';
@@ -90,6 +96,7 @@ export const t = createTranslator(_cfg.translations, _cfg.defaultLocale, { optio
 const _slugs = createSlugResolver(_slugMaps, _cfg.defaultLocale);
 export const getLocalizedSlug = _slugs.getLocalizedSlug;
 export const getCanonicalSlug = _slugs.getCanonicalSlug;
+export const getAllSlugPairs = _slugs.getAllSlugPairs;
 const _routes = createRouteHelpers(_cfg.defaultLocale, _cfg.locales, _slugMaps);
 export const localePath = _routes.localePath;
 export const switchLocalePath = _routes.switchLocalePath;
@@ -99,8 +106,20 @@ export const config = { defaultLocale: _cfg.defaultLocale, locales: _cfg.locales
 export const { defaultLocale, locales, localeLabels, localeHtmlLang } = config;
 `;
               },
-            }],
-          },
+            }];
+
+        // Add content route virtual entrypoint plugin
+        if (config.contentRoutes) {
+          vitePlugins.push(createContentRoutePlugin({
+            contentRoutes: config.contentRoutes,
+            slugMaps,
+            locales: config.locales,
+            defaultLocale: config.defaultLocale,
+          }));
+        }
+
+        hookOptions.updateConfig({
+          vite: { plugins: vitePlugins },
         });
       },
     },

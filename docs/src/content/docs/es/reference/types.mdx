@@ -62,6 +62,24 @@ interface PageEntry {
 | `entrypoint` | Ruta del componente Astro (ej., `'src/pages/about.astro'`) |
 | `slugs` | Slugs de URL específicos del idioma para esta página |
 
+## `ContentRouteConfig`
+
+Configuración para una ruta de colección de contenido con entrypoints virtuales por idioma.
+
+```ts
+interface ContentRouteConfig {
+  template: string;
+  contentDir: string;
+  prefixes: Record<string, string>;
+}
+```
+
+| Campo | Descripción |
+|-------|-------------|
+| `template` | Ruta de la página plantilla (ej., `'src/pages/case-studies/_[...slug].astro'`) |
+| `contentDir` | Directorio de contenido para descubrimiento de slugs |
+| `prefixes` | Prefijo de ruta por idioma (ej., `{ en: 'case-studies', es: 'estudios-de-caso' }`) |
+
 ## `I18nextOptions`
 
 Configuración para plugins de i18next y opciones de inicialización personalizadas.
@@ -88,6 +106,7 @@ interface I18nConfig extends LocaleConfig {
   slugMaps?: Record<string, SlugMap>;
   pagesDir?: string;
   contentDirs?: Record<string, string>;
+  contentRoutes?: Record<string, ContentRouteConfig>;
   i18next?: I18nextOptions;
 }
 ```
@@ -98,6 +117,7 @@ interface I18nConfig extends LocaleConfig {
 | `slugMaps` | Mapas de slugs manuales (fusionados con auto-descubiertos) |
 | `pagesDir` | Directorio de páginas para auto-descubrimiento |
 | `contentDirs` | Directorios de contenido para auto-descubrimiento de slugs |
+| `contentRoutes` | Rutas de colecciones de contenido con entrypoints virtuales por idioma |
 | `i18next` | Plugins y opciones de i18next |
 
 ## `I18nInstance`
