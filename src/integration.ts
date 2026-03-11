@@ -1,10 +1,12 @@
 import type { AstroIntegration } from 'astro';
-import type { ContentRouteConfig, LocaleConfig, PageEntry } from './types.js';
+import type { ContentRouteConfig, LocaleConfig, PageEntry, SlugMap } from './types.js';
+import { writeContentRouteFiles } from './contentRouteFiles.js';
 
 interface I18nRoutesOptions {
   config: LocaleConfig;
   pages: Record<string, PageEntry>;
   contentRoutes?: Record<string, ContentRouteConfig>;
+  slugMaps?: Record<string, SlugMap>;
 }
 
 /**
@@ -13,7 +15,7 @@ interface I18nRoutesOptions {
  * Astro's built-in i18n settings from the shared config.
  */
 export function createI18nIntegration(options: I18nRoutesOptions): AstroIntegration {
-  const { config, pages, contentRoutes } = options;
+  const { config, pages, contentRoutes, slugMaps } = options;
 
   return {
     name: 'i18n-routes',
@@ -50,8 +52,15 @@ export function createI18nIntegration(options: I18nRoutesOptions): AstroIntegrat
           }
         }
 
-        // Inject content collection routes for ALL locales via virtual entrypoints
-        if (contentRoutes) {
+        // Inject content collection routes for ALL locales via temp .astro files
+        if (contentRoutes && slugMaps) {
+          const entrypoints = writeContentRouteFiles({
+            contentRoutes,
+            slugMaps,
+            locales: config.locales,
+            defaultLocale: config.defaultLocale,
+          });
+
           for (const [routeKey, routeConfig] of Object.entries(contentRoutes)) {
             for (const locale of config.locales) {
               const prefix = routeConfig.prefixes[locale] ?? routeKey;
@@ -59,11 +68,14 @@ export function createI18nIntegration(options: I18nRoutesOptions): AstroIntegrat
                 ? `/${prefix}/[...slug]`
                 : `/${locale}/${prefix}/[...slug]`;
 
-              injectRoute({
-                pattern,
-                entrypoint: `virtual:content-route/${routeKey}/${locale}`,
-                prerender: true,
-              });
+              const entrypoint = entrypoints[`${routeKey}/${locale}`];
+              if (entrypoint) {
+                injectRoute({
+                  pattern,
+                  entrypoint,
+                  prerender: true,
+                });
+              }
             }
           }
         }

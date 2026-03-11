@@ -4,7 +4,6 @@ import type { AstroIntegration } from 'astro';
 import { createI18nIntegration } from './integration.js';
 import { loadPageMapSync } from './pageMapLoader.js';
 import { loadSlugMapSync } from './slugMapLoader.js';
-import { createContentRoutePlugin } from './contentRouteVite.js';
 
 /**
  * Creates a fully configured i18n Astro integration from a single config object.
@@ -50,8 +49,13 @@ export function createI18n(config: I18nConfig): AstroIntegration {
     }
   }
 
-  // Build the route-injection integration
-  const routeIntegration = createI18nIntegration({ config, pages, contentRoutes: config.contentRoutes });
+  // Build the route-injection integration (pass slugMaps for content route file generation)
+  const routeIntegration = createI18nIntegration({
+    config,
+    pages,
+    contentRoutes: config.contentRoutes,
+    slugMaps,
+  });
 
   // Serialize config data for the virtual module (strip non-serializable fields)
   const serializedConfig = JSON.stringify({
@@ -74,8 +78,10 @@ export function createI18n(config: I18nConfig): AstroIntegration {
           (routeSetup as Function)(hookOptions);
         }
 
-        // Add Vite plugins
-        const vitePlugins: any[] = [{
+        // Add Vite plugin to serve virtual:i18n
+        hookOptions.updateConfig({
+          vite: {
+            plugins: [{
               name: 'i18n-virtual-module',
               resolveId(id: string) {
                 if (id === 'virtual:i18n') return '\0virtual:i18n';
@@ -106,20 +112,8 @@ export const config = { defaultLocale: _cfg.defaultLocale, locales: _cfg.locales
 export const { defaultLocale, locales, localeLabels, localeHtmlLang } = config;
 `;
               },
-            }];
-
-        // Add content route virtual entrypoint plugin
-        if (config.contentRoutes) {
-          vitePlugins.push(createContentRoutePlugin({
-            contentRoutes: config.contentRoutes,
-            slugMaps,
-            locales: config.locales,
-            defaultLocale: config.defaultLocale,
-          }));
-        }
-
-        hookOptions.updateConfig({
-          vite: { plugins: vitePlugins },
+            }],
+          },
         });
       },
     },

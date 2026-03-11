@@ -1,6 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { existsSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { createI18nIntegration } from '../src/integration';
-import type { ContentRouteConfig, LocaleConfig, PageEntry } from '../src/types';
+import type { ContentRouteConfig, LocaleConfig, PageEntry, SlugMap } from '../src/types';
+
+const CACHE_DIR = join(process.cwd(), 'node_modules/.astro-i18n-cache');
 
 const config: LocaleConfig = {
   defaultLocale: 'en',
@@ -27,12 +31,17 @@ function runSetup(options: Parameters<typeof createI18nIntegration>[0]) {
   return { injectRoute, updateConfig };
 }
 
+afterEach(() => {
+  if (existsSync(CACHE_DIR)) {
+    rmSync(CACHE_DIR, { recursive: true });
+  }
+});
+
 describe('createI18nIntegration', () => {
   describe('static page routes', () => {
     it('injects routes for non-default locales only', () => {
       const { injectRoute } = runSetup({ config, pages });
 
-      // Should inject ES routes for index and about
       expect(injectRoute).toHaveBeenCalledWith({
         pattern: '/es',
         entrypoint: 'src/pages/index.astro',
@@ -44,7 +53,6 @@ describe('createI18nIntegration', () => {
         prerender: true,
       });
 
-      // Should NOT inject EN routes (handled by filesystem)
       const calls = injectRoute.mock.calls.map((c: any[]) => c[0].pattern);
       expect(calls.every((p: string) => p.startsWith('/es'))).toBe(true);
     });
@@ -59,54 +67,61 @@ describe('createI18nIntegration', () => {
       },
     };
 
+    const slugMaps: Record<string, SlugMap> = {
+      'case-studies': {
+        'annex-ai-platform': { en: 'annex-ai-platform', es: 'annex-plataforma-ia-construccion' },
+      },
+    };
+
     it('injects content routes for ALL locales including default', () => {
-      const { injectRoute } = runSetup({ config, pages, contentRoutes });
-
-      expect(injectRoute).toHaveBeenCalledWith({
-        pattern: '/case-studies/[...slug]',
-        entrypoint: 'virtual:content-route/case-studies/en',
-        prerender: true,
-      });
-      expect(injectRoute).toHaveBeenCalledWith({
-        pattern: '/es/estudios-de-caso/[...slug]',
-        entrypoint: 'virtual:content-route/case-studies/es',
-        prerender: true,
-      });
-    });
-
-    it('default locale route has no locale prefix', () => {
-      const { injectRoute } = runSetup({ config, pages, contentRoutes });
+      const { injectRoute } = runSetup({ config, pages, contentRoutes, slugMaps });
 
       const contentCalls = injectRoute.mock.calls
         .map((c: any[]) => c[0])
-        .filter((r: any) => r.entrypoint.startsWith('virtual:content-route/'));
+        .filter((r: any) => r.pattern.includes('[...slug]'));
 
-      const enRoute = contentCalls.find((r: any) => r.entrypoint.includes('/en'));
-      expect(enRoute.pattern).toBe('/case-studies/[...slug]');
+      expect(contentCalls).toHaveLength(2);
+
+      const patterns = contentCalls.map((r: any) => r.pattern);
+      expect(patterns).toContain('/case-studies/[...slug]');
+      expect(patterns).toContain('/es/estudios-de-caso/[...slug]');
+    });
+
+    it('default locale route has no locale prefix', () => {
+      const { injectRoute } = runSetup({ config, pages, contentRoutes, slugMaps });
+
+      const contentCalls = injectRoute.mock.calls
+        .map((c: any[]) => c[0])
+        .filter((r: any) => r.pattern.includes('[...slug]'));
+
+      const enRoute = contentCalls.find((r: any) => r.pattern === '/case-studies/[...slug]');
+      expect(enRoute).toBeDefined();
       expect(enRoute.pattern).not.toContain('/en/');
     });
 
     it('non-default locale route has locale prefix', () => {
-      const { injectRoute } = runSetup({ config, pages, contentRoutes });
+      const { injectRoute } = runSetup({ config, pages, contentRoutes, slugMaps });
 
       const contentCalls = injectRoute.mock.calls
         .map((c: any[]) => c[0])
-        .filter((r: any) => r.entrypoint.startsWith('virtual:content-route/'));
+        .filter((r: any) => r.pattern.includes('[...slug]'));
 
-      const esRoute = contentCalls.find((r: any) => r.entrypoint.includes('/es'));
+      const esRoute = contentCalls.find((r: any) => r.pattern.includes('/es/'));
+      expect(esRoute).toBeDefined();
       expect(esRoute.pattern).toBe('/es/estudios-de-caso/[...slug]');
     });
 
-    it('entrypoints use virtual module IDs', () => {
-      const { injectRoute } = runSetup({ config, pages, contentRoutes });
+    it('entrypoints are real file paths', () => {
+      const { injectRoute } = runSetup({ config, pages, contentRoutes, slugMaps });
 
       const contentCalls = injectRoute.mock.calls
         .map((c: any[]) => c[0])
-        .filter((r: any) => r.entrypoint.startsWith('virtual:content-route/'));
+        .filter((r: any) => r.pattern.includes('[...slug]'));
 
-      expect(contentCalls).toHaveLength(2);
       contentCalls.forEach((r: any) => {
-        expect(r.entrypoint).toMatch(/^virtual:content-route\/case-studies\/(en|es)$/);
+        expect(r.entrypoint).toContain('.astro-i18n-cache');
+        expect(r.entrypoint).toMatch(/\.(astro)$/);
+        expect(existsSync(r.entrypoint)).toBe(true);
       });
     });
 
@@ -115,18 +130,27 @@ describe('createI18nIntegration', () => {
         blog: {
           template: 'src/pages/blog/_[...slug].astro',
           contentDir: 'src/content/blog',
-          prefixes: { en: 'blog' }, // no 'es' prefix
+          prefixes: { en: 'blog' },
         },
       };
 
-      const { injectRoute } = runSetup({ config, pages, contentRoutes: routesWithMissingPrefix });
+      const blogSlugMaps: Record<string, SlugMap> = {
+        blog: { 'post-1': { en: 'post-1', es: 'post-1' } },
+      };
 
-      // ES should fall back to routeKey 'blog'
-      expect(injectRoute).toHaveBeenCalledWith({
-        pattern: '/es/blog/[...slug]',
-        entrypoint: 'virtual:content-route/blog/es',
-        prerender: true,
+      const { injectRoute } = runSetup({
+        config,
+        pages,
+        contentRoutes: routesWithMissingPrefix,
+        slugMaps: blogSlugMaps,
       });
+
+      const contentCalls = injectRoute.mock.calls
+        .map((c: any[]) => c[0])
+        .filter((r: any) => r.pattern.includes('[...slug]'));
+
+      const esRoute = contentCalls.find((r: any) => r.pattern.includes('/es/'));
+      expect(esRoute.pattern).toBe('/es/blog/[...slug]');
     });
   });
 });
